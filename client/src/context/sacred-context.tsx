@@ -87,7 +87,7 @@ interface SacredContextType {
   setFrequency: (frequency: number) => void;
   setBoost: (boost: boolean) => void;
   setMultiplier: (multiplier: number) => void;
-  sendIntention: () => void;
+  sendIntention: (customIntention?: string, customFrequency?: number, customFieldType?: string) => void;
   activateMerkaba: () => void;
   toggleMetatronBoost: () => void;
   encodeWithSriYantra: () => void;
@@ -173,8 +173,11 @@ export const SacredProvider = ({ children }: { children: ReactNode }) => {
   }, [lastMessage]);
   
   // Send intention through WebSocket
-  const sendIntention = () => {
-    if (!intention) {
+  const sendIntention = (customIntention?: string, customFrequency?: number, customFieldType?: string) => {
+    const intentionToSend = customIntention || intention;
+    const frequencyToSend = customFrequency || frequency;
+    
+    if (!intentionToSend) {
       toast({
         title: "Intention Required",
         description: "Please enter an intention before sending.",
@@ -183,11 +186,25 @@ export const SacredProvider = ({ children }: { children: ReactNode }) => {
       return;
     }
     
+    // Update state if custom values are provided
+    if (customIntention && customIntention !== intention) {
+      setIntention(customIntention);
+    }
+    
+    if (customFrequency && customFrequency !== frequency) {
+      setFrequency(customFrequency);
+    }
+    
+    // Determine message type based on field type
+    const messageType = customFieldType ? 
+      customFieldType.toUpperCase().replace(/[^A-Z_]/g, '_') : 
+      'INTENTION';
+    
     sendMessage(JSON.stringify({
-      type: 'INTENTION',
+      type: messageType,
       data: {
-        intention,
-        frequency,
+        intention: intentionToSend,
+        frequency: frequencyToSend,
         boost,
         multiplier
       }

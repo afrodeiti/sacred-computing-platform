@@ -227,6 +227,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Semantic search for healing codes
+  app.post("/api/healing-codes/semantic", async (req, res) => {
+    try {
+      const { issue, limit = 5 } = req.body;
+      
+      if (!issue) {
+        return res.status(400).json({ error: "Issue description is required" });
+      }
+      
+      // Get all healing codes
+      const allCodes = await storage.getHealingCodes();
+      
+      // For now we'll use a simple keyword search as we don't have OpenAI in this environment
+      // In the Python implementation, this is handled by the semantic matching function
+      const searchResults = await storage.searchHealingCodes(issue);
+      
+      res.json({
+        matched_codes: searchResults.slice(0, limit),
+        semantic_match: false, 
+        explanation: "Basic keyword matching was used. For semantic matching, the backend would use OpenAI integration.",
+        recommended_practice: "Recite each code 9 times daily while focusing on your intention of healing."
+      });
+    } catch (error) {
+      console.error("Error performing semantic healing code search:", error);
+      res.status(500).json({ error: "Failed to perform semantic healing code search" });
+    }
+  });
+  
   // Get all soul archives
   app.get("/api/soul-archives", async (req, res) => {
     try {
@@ -295,6 +323,64 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error deleting soul archive:", error);
       res.status(500).json({ error: "Failed to delete soul archive" });
+    }
+  });
+  
+  // Get intention recommendation
+  app.post("/api/intention-recommendation", async (req, res) => {
+    try {
+      const { userInput, context = "general" } = req.body;
+      
+      if (!userInput) {
+        return res.status(400).json({ error: "User input is required" });
+      }
+      
+      // Context-specific intention recommendations
+      let recommended, fieldType, frequency, reason;
+      
+      if (context === "healing") {
+        recommended = `I am completely healed and vibrant with ${userInput}`;
+        fieldType = "flower_of_life";
+        frequency = 528; // DNA repair frequency
+        reason = "Healing intentions work best with present tense affirmations and the repair frequency of 528Hz";
+      } else if (context === "manifestation") {
+        recommended = `I am gratefully experiencing ${userInput} in my life now`;
+        fieldType = "torus";
+        frequency = 7.83; // Earth frequency for grounding manifestations
+        reason = "Manifestation intentions work best with gratitude and present tense phrasing";
+      } else if (context === "protection") {
+        recommended = `I am divinely protected from all forms of ${userInput}`;
+        fieldType = "merkaba";
+        frequency = 13.0; // Higher frequency for stronger field
+        reason = "Protection intentions work best with the Merkaba field, which creates a natural energetic boundary";
+      } else if (context === "transformation") {
+        recommended = `I am easily transforming ${userInput} with divine grace`;
+        fieldType = "metatron";
+        frequency = 9.0; // Tesla's completion number
+        reason = "Transformation intentions benefit from Metatron's Cube which connects all platonic solids";
+      } else if (context === "connection") {
+        recommended = `I am deeply connected to ${userInput} at all levels of my being`;
+        fieldType = "sri_yantra";
+        frequency = 7.83; // Schumann resonance for connection
+        reason = "Connection intentions work best with Sri Yantra which represents the cosmos and unity consciousness";
+      } else {
+        // Default balanced approach
+        recommended = `I am in perfect harmony with ${userInput}`;
+        fieldType = "torus";
+        frequency = 7.83;
+        reason = "This balanced intention works for general purposes and aligns with Earth's natural frequency";
+      }
+      
+      res.json({
+        original_input: userInput,
+        recommended_intention: recommended,
+        reason: reason,
+        suggested_field_type: fieldType,
+        suggested_frequency: frequency
+      });
+    } catch (error) {
+      console.error("Error generating intention recommendation:", error);
+      res.status(500).json({ error: "Failed to generate intention recommendation" });
     }
   });
 
