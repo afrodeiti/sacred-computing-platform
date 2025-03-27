@@ -1,12 +1,23 @@
 #!/bin/bash
-# Custom build script for Render deployment
+set -e
 
-# Install dependencies
+# Install production dependencies
 npm ci
 
-# Run the build process with explicit npx
+# Build the client
 npx vite build
-npx esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist
 
-# Make sure the output directory exists
-echo "Build completed!"
+# Build the production server
+npx esbuild server/production.ts --platform=node --packages=external --bundle --format=esm --outfile=dist/production.js
+
+# Push the database schema
+echo "Pushing database schema..."
+npx drizzle-kit push
+
+# Clean up
+rm -rf node_modules
+
+# Install only production dependencies
+npm ci --production
+
+echo "Build completed successfully!"
