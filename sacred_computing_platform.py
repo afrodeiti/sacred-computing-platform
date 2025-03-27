@@ -5,10 +5,16 @@ Sacred Computing Platform - Comprehensive Implementation
 A complete Python implementation of the Sacred Computing Platform including:
 - Sacred geometry visualization and calculations
 - Intention broadcasting via network packets
-- Healing code database
+- Healing code database with Grabovoi codes
 - Soul archive storage
 - WebSocket server for real-time energetic feedback
 - Web API endpoints
+- Scalar field transmission
+- Past life insights
+- Environmental anchoring rituals
+- Remote location harmonization
+- Dynamic invocation modules
+- Blessing rituals with Flower of Life
 
 This single file contains all functionality of the web application
 consolidated for local use and study.
@@ -17,6 +23,7 @@ Usage:
   python sacred_computing_platform.py --mode server  # Run server mode
   python sacred_computing_platform.py --mode broadcast --intention "Healing and peace"  # Broadcast intention
   python sacred_computing_platform.py --mode calculate --intention "Healing" --field-type torus  # Calculate sacred geometry
+  python sacred_computing_platform.py --mode flask  # Run as a Flask web application
 """
 
 import argparse
