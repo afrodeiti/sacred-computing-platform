@@ -81,8 +81,8 @@ export default function IntentionInput() {
               onChange={(e) => setMultiplier(Number(e.target.value))}
               className="bg-gray-900 border border-purple-800/30 rounded-md py-1 px-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-yellow-500/50" 
             >
-              {FIBONACCI.slice(0, 7).map(value => (
-                <option key={value} value={value}>{value}</option>
+              {FIBONACCI.slice(0, 7).map((value, index) => (
+                <option key={`fib-${index}-${value}`} value={value}>{value}</option>
               ))}
             </select>
           </div>

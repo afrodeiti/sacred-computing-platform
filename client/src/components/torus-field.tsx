@@ -66,7 +66,7 @@ export default function TorusField() {
         {/* Torus rings and pulses are created dynamically in useEffect */}
       </div>
       
-      <style jsx>{`
+      <style>{`
         @keyframes torus-rotation {
           0% {
             transform: rotateX(80deg) rotateY(0deg);
