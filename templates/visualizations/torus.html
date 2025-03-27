@@ -1,87 +1,106 @@
 {% extends "layout.html" %}
 
-{% block title %}Torus Field Visualization{% endblock %}
+{% block title %}Torus Field Visualization | Sacred Computing Platform{% endblock %}
 
 {% block additional_styles %}
-.info-panel {
-    background: rgba(17, 24, 39, 0.8);
-    border-radius: 8px;
-    border: 1px solid rgba(79, 70, 229, 0.2);
-}
-.intention-display {
-    background: linear-gradient(135deg, rgba(79, 70, 229, 0.1) 0%, rgba(147, 51, 234, 0.1) 100%);
-    border-radius: 8px;
-    border: 1px solid rgba(124, 58, 237, 0.3);
-}
+<style>
+    .intention-display {
+        background: rgba(30, 41, 59, 0.5);
+        border-radius: 10px;
+        border-left: 4px solid #4f46e5;
+    }
+    .visualization-controls {
+        background: rgba(15, 23, 42, 0.5);
+        border-radius: 10px;
+    }
+</style>
 {% endblock %}
 
 {% block content %}
-<div class="mb-6">
-    <h2 class="text-3xl font-bold mb-2 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-500">
+<div class="text-center mb-8">
+    <h2 class="text-3xl font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500">
         Torus Field Visualization
     </h2>
-    <p class="text-gray-300">
-        The torus is a fundamental pattern in sacred geometry that represents the flow of energy throughout the universe.
-        A three-dimensional torus resembles a donut shape and symbolizes the continuous flow and recycling of energy.
+    <p class="text-lg text-gray-300">
+        The torus represents the fundamental energy pattern of creation - a self-sustaining flow from center outward and back again
     </p>
 </div>
 
-<div class="flex flex-col lg:flex-row gap-6">
-    <div class="lg:w-2/3">
-        <div class="visualization-container bg-black">
+<div class="intention-display p-4 mb-6">
+    <h3 class="text-xl font-semibold mb-2 text-blue-300">Active Intention</h3>
+    <p class="text-lg text-gray-200 italic">"{{ intention }}"</p>
+    <div class="mt-2 text-sm text-gray-400">Resonating at {{ frequency }} Hz • Coherence Level: {{ coherence }}</div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+    <div class="lg:col-span-2">
+        <div class="visualization-container">
             <canvas id="torusCanvas" class="visualization-canvas"></canvas>
         </div>
     </div>
     
-    <div class="lg:w-1/3">
-        <div class="info-panel p-4 mb-4">
-            <h3 class="text-xl font-bold mb-2 text-indigo-400">Field Properties</h3>
-            
-            <div class="mb-3">
-                <label class="block text-sm font-medium text-gray-400 mb-1">Intention</label>
-                <div class="intention-display p-3 text-white">
-                    {{ intention|default:"Perfect health and vitality" }}
-                </div>
+    <div class="visualization-controls p-4">
+        <h3 class="text-lg font-semibold mb-4 text-purple-300">Field Properties</h3>
+        
+        <div class="space-y-4">
+            <div>
+                <label class="block text-gray-400 text-sm mb-1">Inner Flow</label>
+                <div class="text-gray-200 font-mono">{{ inner_flow }}</div>
             </div>
             
-            <div class="mb-3">
-                <label class="block text-sm font-medium text-gray-400 mb-1">Frequency</label>
-                <div class="flex items-center">
-                    <span class="text-white font-mono">{{ frequency|default:"7.83" }} Hz</span>
-                    <span class="ml-2 text-xs text-indigo-400">(Schumann Resonance)</span>
-                </div>
+            <div>
+                <label class="block text-gray-400 text-sm mb-1">Outer Flow</label>
+                <div class="text-gray-200 font-mono">{{ outer_flow }}</div>
             </div>
             
-            <div class="grid grid-cols-2 gap-2 mt-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-400 mb-1">Inner Flow</label>
-                    <span class="text-white">{{ inner_flow|default:"Clockwise" }}</span>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-400 mb-1">Outer Flow</label>
-                    <span class="text-white">{{ outer_flow|default:"Counter-clockwise" }}</span>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-400 mb-1">Phase Angle</label>
-                    <span class="text-white">{{ phase_angle|default:"45" }}°</span>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-400 mb-1">Coherence</label>
-                    <span class="text-white">{{ coherence|default:"High" }}</span>
-                </div>
+            <div>
+                <label class="block text-gray-400 text-sm mb-1">Phase Angle</label>
+                <div class="text-gray-200 font-mono">{{ phase_angle }}</div>
+            </div>
+            
+            <div class="pt-4 border-t border-gray-700">
+                <label class="block text-gray-400 text-sm mb-1">Rotation Speed</label>
+                <input type="range" id="rotationSpeed" min="0" max="100" value="50" class="w-full h-2 rounded-lg appearance-none cursor-pointer bg-gray-700">
+            </div>
+            
+            <div>
+                <label class="block text-gray-400 text-sm mb-1">Particle Density</label>
+                <input type="range" id="particleDensity" min="1000" max="10000" value="5000" class="w-full h-2 rounded-lg appearance-none cursor-pointer bg-gray-700">
             </div>
         </div>
         
-        <div class="p-4 bg-gray-800 rounded-lg">
-            <h3 class="text-xl font-bold mb-2 text-blue-400">Effects & Benefits</h3>
-            <ul class="list-disc list-inside text-gray-300 space-y-1">
-                <li>Balances energy centers and meridians</li>
-                <li>Creates a protective energetic field</li>
-                <li>Facilitates coherent intention manifestation</li>
-                <li>Harmonizes with Earth's natural frequencies</li>
-                <li>Supports meditation and mindfulness practices</li>
-            </ul>
+        <div class="mt-6 pt-4 border-t border-gray-700">
+            <button id="saveFieldBtn" class="w-full py-2 px-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 rounded-lg text-white font-medium transition">
+                Save to Soul Archive
+            </button>
         </div>
+    </div>
+</div>
+
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div class="bg-gray-800 bg-opacity-60 p-4 rounded-lg">
+        <h3 class="text-lg font-semibold mb-3 text-blue-300">About Torus Fields</h3>
+        <p class="text-gray-300 mb-2">
+            The torus is a self-sustaining energy field that resembles a donut shape. It represents the fundamental 
+            pattern found throughout the universe, from atoms to galaxies.
+        </p>
+        <p class="text-gray-300">
+            When an intention is embedded in a torus field, it creates a continuous flow pattern that 
+            cycles the energy through the center and back around the outside, amplifying and sustaining the intention.
+        </p>
+    </div>
+    
+    <div class="bg-gray-800 bg-opacity-60 p-4 rounded-lg">
+        <h3 class="text-lg font-semibold mb-3 text-blue-300">Working with Torus Energy</h3>
+        <p class="text-gray-300 mb-2">
+            To enhance your connection with the torus field:
+        </p>
+        <ul class="list-disc list-inside text-gray-300 space-y-1">
+            <li>Focus on your heart center as you observe the visualization</li>
+            <li>Breathe in rhythm with the expanding and contracting flow</li>
+            <li>Visualize your intention flowing through the central axis</li>
+            <li>Allow the field to extend beyond your screen and surround you</li>
+        </ul>
     </div>
 </div>
 {% endblock %}
@@ -89,135 +108,138 @@
 {% block scripts %}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Get the canvas element
         const canvas = document.getElementById('torusCanvas');
-        
-        // Initialize the renderer
-        const renderer = new THREE.WebGLRenderer({
-            canvas: canvas,
-            antialias: true,
-            alpha: true
-        });
-        renderer.setSize(canvas.clientWidth, canvas.clientHeight);
-        renderer.setClearColor(0x000000, 1);
-        
-        // Create a scene
         const scene = new THREE.Scene();
-        
-        // Setup camera
         const camera = new THREE.PerspectiveCamera(75, canvas.clientWidth / canvas.clientHeight, 0.1, 1000);
         camera.position.z = 5;
         
-        // Add orbit controls
-        const controls = new THREE.OrbitControls(camera, renderer.domElement);
-        controls.enableDamping = true;
-        controls.dampingFactor = 0.05;
+        const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+        renderer.setSize(canvas.clientWidth, canvas.clientHeight);
+        renderer.setClearColor(0x000000, 0);
         
-        // Create torus geometry
-        const torusGeometry = new THREE.TorusGeometry(2, 0.5, 32, 100);
-        
-        // Create pulsating material
-        const torusMaterial = new THREE.MeshPhongMaterial({
-            color: 0x4F46E5,
-            emissive: 0x2563EB,
-            emissiveIntensity: 0.5,
-            shininess: 90,
-            transparent: true,
-            opacity: 0.9,
-        });
-        
-        // Create the torus mesh
-        const torus = new THREE.Mesh(torusGeometry, torusMaterial);
-        scene.add(torus);
-        
-        // Add ambient light
-        const ambientLight = new THREE.AmbientLight(0x333333);
+        // Add lights
+        const ambientLight = new THREE.AmbientLight(0x404040);
         scene.add(ambientLight);
         
-        // Add directional light
         const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
-        directionalLight.position.set(5, 3, 5);
+        directionalLight.position.set(1, 1, 1);
         scene.add(directionalLight);
         
-        // Add particle system for energy flow
-        const particleCount = 1000;
-        const particles = new THREE.BufferGeometry();
-        const positions = new Float32Array(particleCount * 3);
-        const particleSizes = new Float32Array(particleCount);
+        // Create torus geometry
+        const geometry = new THREE.TorusGeometry(2, 0.7, 16, 100);
+        const material = new THREE.MeshPhongMaterial({ 
+            color: 0x4f46e5,
+            emissive: 0x2f26a5,
+            specular: 0xffffff,
+            shininess: 100,
+            transparent: true,
+            opacity: 0.85,
+            wireframe: false
+        });
         
-        // Position particles along the torus path
+        const torus = new THREE.Mesh(geometry, material);
+        scene.add(torus);
+        
+        // Add particle system for energy flow
+        const particlesGeometry = new THREE.BufferGeometry();
+        const particleCount = 5000;
+        
+        const positions = new Float32Array(particleCount * 3);
+        const colors = new Float32Array(particleCount * 3);
+        
+        const color = new THREE.Color();
+        
         for (let i = 0; i < particleCount; i++) {
-            const t = i / particleCount;
-            const theta = t * Math.PI * 2;
-            const phi = t * Math.PI * 2;
+            // Position particles in a torus shape
+            const angle1 = Math.random() * Math.PI * 2;
+            const angle2 = Math.random() * Math.PI * 2;
             
-            const R = 2; // Major radius
-            const r = 0.5; // Minor radius
+            const radius = 2;
+            const tubeRadius = 0.7 * (0.8 + Math.random() * 0.4);
             
-            const x = (R + r * Math.cos(phi)) * Math.cos(theta);
-            const y = (R + r * Math.cos(phi)) * Math.sin(theta);
-            const z = r * Math.sin(phi);
+            const x = (radius + tubeRadius * Math.cos(angle2)) * Math.cos(angle1);
+            const y = (radius + tubeRadius * Math.cos(angle2)) * Math.sin(angle1);
+            const z = tubeRadius * Math.sin(angle2);
             
             positions[i * 3] = x;
             positions[i * 3 + 1] = y;
             positions[i * 3 + 2] = z;
             
-            particleSizes[i] = Math.random() * 0.05 + 0.03;
+            // Color gradient from purple to blue
+            color.setHSL(0.7 + Math.random() * 0.1, 0.9, 0.5 + Math.random() * 0.3);
+            
+            colors[i * 3] = color.r;
+            colors[i * 3 + 1] = color.g;
+            colors[i * 3 + 2] = color.b;
         }
         
-        particles.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-        particles.setAttribute('size', new THREE.BufferAttribute(particleSizes, 1));
+        particlesGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+        particlesGeometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
         
-        // Create particle material
-        const particleMaterial = new THREE.ShaderMaterial({
-            uniforms: {
-                time: { value: 0 },
-                color: { value: new THREE.Color(0x8B5CF6) },
-            },
-            vertexShader: `
-                attribute float size;
-                uniform float time;
-                varying vec3 vColor;
-                
-                void main() {
-                    vec3 pos = position;
-                    
-                    // Add subtle motion to particles
-                    float phaseOffset = position.x + position.y + position.z;
-                    float phase = time * 0.5 + phaseOffset;
-                    
-                    // Move particles along the torus
-                    vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0);
-                    gl_PointSize = size * (300.0 / -mvPosition.z);
-                    gl_Position = projectionMatrix * mvPosition;
-                    
-                    // Color variation
-                    vColor = vec3(0.54, 0.36, 0.96);  // Purple base
-                }
-            `,
-            fragmentShader: `
-                varying vec3 vColor;
-                
-                void main() {
-                    // Draw circular particles
-                    vec2 center = gl_PointCoord - vec2(0.5);
-                    float dist = length(center);
-                    float alpha = smoothstep(0.5, 0.4, dist);
-                    
-                    gl_FragColor = vec4(vColor, alpha);
-                }
-            `,
+        const particleMaterial = new THREE.PointsMaterial({
+            size: 0.05,
+            vertexColors: true,
             transparent: true,
+            opacity: 0.8,
             blending: THREE.AdditiveBlending,
-            depthWrite: false,
+            sizeAttenuation: true
         });
         
-        // Create the particle system
-        const particleSystem = new THREE.Points(particles, particleMaterial);
-        scene.add(particleSystem);
+        // Create shader material for more advanced particle effects
+        particleMaterial.onBeforeCompile = function(shader) {
+            // Add time uniform for animation
+            shader.uniforms.time = { value: 0 };
+            
+            // Updated vertex shader for particle movement
+            shader.vertexShader = `
+                uniform float time;
+                attribute vec3 color;
+                varying vec3 vColor;
+                
+                void main() {
+                    vColor = color;
+                    
+                    // Add some movement based on position and time
+                    vec3 pos = position;
+                    float displacement = sin(time * 2.0 + position.x) * sin(time * 2.0 + position.y) * sin(time * 2.0 + position.z) * 0.1;
+                    
+                    vec3 newPosition = pos * (1.0 + displacement);
+                    
+                    vec4 mvPosition = modelViewMatrix * vec4(newPosition, 1.0);
+                    gl_PointSize = size * (300.0 / -mvPosition.z);
+                    gl_Position = projectionMatrix * mvPosition;
+                }
+            `;
+            
+            particleMaterial.userData.shader = shader;
+        };
+        
+        const particles = new THREE.Points(particlesGeometry, particleMaterial);
+        scene.add(particles);
+        
+        // Add controls
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+        
+        // Add UI control handling
+        const rotationSpeedControl = document.getElementById('rotationSpeed');
+        const particleDensityControl = document.getElementById('particleDensity');
+        
+        let rotationSpeed = 0.5;
+        rotationSpeedControl.addEventListener('input', function() {
+            rotationSpeed = this.value / 50;
+        });
+        
+        particleDensityControl.addEventListener('input', function() {
+            // This would ideally regenerate the particle system
+            // For simplicity, we'll just adjust the opacity
+            particleMaterial.opacity = this.value / 10000;
+        });
         
         // Animation loop
         const clock = new THREE.Clock();
+        
         function animate() {
             requestAnimationFrame(animate);
             
@@ -229,12 +251,14 @@
             torus.rotation.y += 0.02 * delta;
             
             // Pulse the torus
-            const freq = {% if frequency %}{{ frequency }}{% else %}7.83{% endif %};
+            const freq = 7.83;
             const pulseScale = 1 + Math.sin(time * freq * 0.2) * 0.03;
             torus.scale.set(pulseScale, pulseScale, pulseScale);
             
             // Update particle system
-            particleMaterial.uniforms.time.value = time;
+            if (particleMaterial.userData.shader) {
+                particleMaterial.userData.shader.uniforms.time.value = time;
+            }
             
             // Update controls
             controls.update();
@@ -256,6 +280,12 @@
         
         // Start animation
         animate();
+        
+        // Add save button functionality
+        document.getElementById('saveFieldBtn').addEventListener('click', function() {
+            alert('Torus field saved to Soul Archive.');
+            // In a real implementation, this would call an API endpoint
+        });
     });
 </script>
 {% endblock %}

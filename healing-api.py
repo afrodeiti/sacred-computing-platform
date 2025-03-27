@@ -682,7 +682,77 @@ class SacredStorage:
         conn.close()
     
     def _initialize_healing_codes(self, cursor, conn):
-        """Initialize with sample healing codes"""
+        """Initialize with healing codes from attached file"""
+        # Check if healing_codes table already has entries
+        cursor.execute('SELECT COUNT(*) FROM healing_code')
+        if cursor.fetchone()[0] > 0:
+            return
+        
+        try:
+            healing_codes = []
+            current_category = "UNCATEGORIZED"
+            current_subcategory = ""
+            
+            # Try to open the attached healing_codes.txt file
+            with open('attached_assets/healing_codes.txt', 'r') as f:
+                lines = f.readlines()
+                
+                for line in lines:
+                    line = line.strip()
+                    
+                    # Skip empty lines
+                    if not line:
+                        continue
+                    
+                    # If line is in all caps, it's a main category
+                    if line.isupper() and len(line) > 5:
+                        current_category = line
+                        continue
+                    
+                    # If line doesn't have a '-' character, it might be a subcategory
+                    if '-' not in line and not any(char.isdigit() for char in line):
+                        current_subcategory = line
+                        continue
+                    
+                    # Parse Grabovoi healing code line (format: CODE - description)
+                    parts = line.split(' - ', 1)
+                    if len(parts) == 2:
+                        code = parts[0].strip()
+                        description = parts[1].strip()
+                        
+                        # Skip if code or description is empty
+                        if not code or not description:
+                            continue
+                        
+                        # Create healing code entry
+                        healing_codes.append((
+                            code,
+                            description,
+                            current_category,
+                            f"I am experiencing {description.lower().replace('for ', '').replace('to ', '')}",  # Generate affirmation
+                            None,  # Vibration
+                            current_subcategory if current_subcategory else "Divine Healing Codes"
+                        ))
+            
+            # If we have healing codes, insert them
+            if healing_codes:
+                cursor.executemany(
+                    'INSERT INTO healing_code (code, description, category, affirmation, vibration, source) VALUES (?, ?, ?, ?, ?, ?)',
+                    healing_codes
+                )
+                conn.commit()
+                print(f"Loaded {len(healing_codes)} healing codes from file")
+            else:
+                # Fallback to sample codes if no codes were parsed from file
+                self._load_sample_codes(cursor, conn)
+                
+        except Exception as e:
+            print(f"Error loading healing codes from file: {str(e)}")
+            # Fallback to sample codes
+            self._load_sample_codes(cursor, conn)
+    
+    def _load_sample_codes(self, cursor, conn):
+        """Load sample healing codes as fallback"""
         sample_codes = [
             ("23 74 555", "Healing headaches in general", "CENTRAL NERVOUS SYSTEM", "I am pain-free and clear-minded", 555, "Grabovoi"),
             ("58 33 554", "Healing migraine", "CENTRAL NERVOUS SYSTEM", "My head is clear and peaceful", 554, "Grabovoi"),
@@ -709,6 +779,7 @@ class SacredStorage:
             sample_codes
         )
         conn.commit()
+        print("Loaded sample healing codes")
     
     # User methods
     def get_user(self, user_id: int) -> Optional[Dict[str, Any]]:
