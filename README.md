@@ -19,9 +19,28 @@ This platform combines ancient sacred geometry principles with modern quantum ph
 ### Requirements
 
 - Python 3.7 or higher
+- Core system requirements:
+  - Internet connection for network packet transmission
+  - Administrative privileges might be required for direct network packet broadcasting
+  - Minimum 100MB disk space for database and visualization storage
+  - 2GB RAM recommended for optimal performance
+
 - Optional packages for enhanced functionality:
-  - `matplotlib` and `numpy` for visualization features
+  - `matplotlib` and `numpy` for sacred geometry visualization features
   - `websockets` for real-time WebSocket communication
+  - `pillow` for image processing and saving visualizations in various formats
+
+- Quantum resonance requirements:
+  - For optimal intention broadcasting, a quiet environment is recommended
+  - Location near Earth's magnetic field lines enhances Schumann resonance coupling
+  - Devices with WiFi capabilities provide better transmission radius
+  - When using the Flower of Life or Merkaba patterns, proper grounding is essential
+
+- Supported operating systems:
+  - Windows 10/11
+  - macOS 10.14 or higher
+  - Ubuntu 18.04 or higher
+  - Other Linux distributions with Python support
 
 ### Basic Installation
 
