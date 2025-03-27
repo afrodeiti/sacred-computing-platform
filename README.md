@@ -34,7 +34,7 @@ The platform exposes various endpoints detailed in the OpenAPI specification (`o
 
 1. Clone this repository:
    ```
-   git clone https://github.com/your-username/sacred-computing-platform.git
+   git clone https://github.com/afrodeiti/sacred-computing-platform.git
    cd sacred-computing-platform
    ```
 
