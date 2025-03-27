@@ -4,7 +4,7 @@ info:
   description: API for accessing sacred geometry patterns, intentions, and healing codes
   version: 1.0.0
 servers:
-  - url: https://your-app-name.onrender.com
+  - url: https://sacred-computing-platform.onrender.com
     description: Production server
   - url: http://localhost:5000
     description: Local development server
@@ -287,6 +287,17 @@ paths:
                   type: string
                   enum: [healing, manifestation, protection, transformation, connection]
                   description: The context or purpose of the intention
+            examples:
+              healingExample:
+                summary: Healing intention example
+                value:
+                  userInput: "reducing inflammation in my joints"
+                  context: "healing"
+              manifestationExample:
+                summary: Manifestation intention example
+                value:
+                  userInput: "a new job opportunity"
+                  context: "manifestation"
       responses:
         '200':
           description: Successful operation
@@ -331,6 +342,17 @@ paths:
                 emotionalState:
                   type: string
                   description: Emotional state if relevant
+            examples:
+              physicalExample:
+                summary: Physical health issue example
+                value:
+                  situation: "recovering from surgery"
+                  bodyArea: "stomach"
+              emotionalExample:
+                summary: Emotional health example
+                value:
+                  situation: "difficulty with focus and concentration"
+                  emotionalState: "anxiety"
       responses:
         '200':
           description: Successful operation

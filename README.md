@@ -1,115 +1,94 @@
 # Sacred Computing Platform
 
-A comprehensive spiritual computing platform that combines sacred geometry, healing codes, and intention broadcasting through WiFi network packets. The platform includes a Python API backend and a JavaScript frontend for visualization.
+A comprehensive platform for sacred geometry visualization, energetic feedback, and healing code recommendations, with ChatGPT integration capabilities.
 
-## Features
+## Overview
 
-- 🔮 **Sacred Geometry Visualization**: Generate and visualize torus fields, merkaba fields, Metatron's Cube, Sri Yantra, and Flower of Life patterns
-- ✨ **Real-time Energetic Feedback**: Get immediate feedback on intention broadcasting through WebSockets
-- 📡 **Network Packet Intention Broadcasting**: Embed intentions into WiFi packets for distribution
-- 🧘‍♀️ **Healing Code Database**: Access a comprehensive database of Grabovoi codes and healing frequencies
-- 💾 **Soul Archive Storage**: Persist your spiritual work in a database
-- 🤖 **ChatGPT Integration**: Use API integration with OpenAI models to enhance intention setting and get personalized healing recommendations
+The Sacred Computing Platform integrates sacred geometry patterns, intention amplification, and healing codes into a powerful API that can be accessed by ChatGPT and other applications. This platform enables users to:
 
-## Tech Stack
+- Generate sacred geometry fields (torus, merkaba, metatron's cube, sri yantra, flower of life)
+- Amplify intentions using divine proportion
+- Create network packets with embedded intentions
+- Access a database of healing codes
+- Get personalized healing code recommendations
+- Optimize intention wording for maximum effectiveness
 
-- **Backend**: Python (Flask, SQLite)
-- **Frontend**: JavaScript/React
-- **API Spec**: OpenAPI 3.1.0
-- **Database**: SQLite (local), PostgreSQL (production)
-- **Real-time**: WebSockets
-- **AI Integration**: OpenAI API for intention enhancement
+## API Endpoints
 
-## Deployment
+The platform exposes various endpoints detailed in the OpenAPI specification (`openapi.yaml`):
 
-The API can be deployed to Render and called by ChatGPT models via API Actions.
+- `/api/sacred-geometry/{field-type}` - Generate sacred geometry fields
+- `/api/healing-codes` - Access healing codes database
+- `/api/amplify` - Amplify intentions with divine proportion
+- `/api/network-packet` - Create network packets
+- `/api/intention-recommendation` - Get optimized intention wording
+- `/api/healing-recommendation` - Get personalized healing code recommendations
 
-## Getting Started
+## Setup for Local Development
 
 ### Prerequisites
-
-- Python 3.8+
-- Node.js 16+
-- OpenAI API key (for ChatGPT integration)
+- Python 3.9+
+- Required Python packages (see `python_requirements.txt`)
 
 ### Installation
 
-1. Clone this repository
-```bash
-git clone https://github.com/yourusername/sacred-computing-platform.git
-cd sacred-computing-platform
-```
+1. Clone this repository:
+   ```
+   git clone https://github.com/your-username/sacred-computing-platform.git
+   cd sacred-computing-platform
+   ```
 
-2. Install Python dependencies
-```bash
-pip install -r python_requirements.txt
-```
+2. Install dependencies:
+   ```
+   pip install -r python_requirements.txt
+   ```
 
-3. Install JavaScript dependencies
-```bash
-cd client
-npm install
-```
+3. Run the API server:
+   ```
+   python healing-api.py --mode api
+   ```
 
-4. Set up environment variables
-```bash
-export OPENAI_API_KEY="your_openai_api_key"
-```
+4. The API will be available at `http://localhost:5000`
 
-### Running the Application
+## Deployment to Render
 
-#### Python API Server
-```bash
-python healing-api.py
-```
+This repository includes a `render.yaml` file for easy deployment to Render.com:
 
-#### Web Interface
-```bash
-cd client
-npm run dev
-```
+1. Fork this repository to your GitHub account
+2. Sign up for a Render account at https://render.com
+3. Connect your GitHub account to Render
+4. Click "New" and select "Blueprint" 
+5. Select your forked repository
+6. Render will automatically deploy the API based on the blueprint configuration
 
-## API Reference
+After deployment, your API will be available at `https://sacred-computing-platform.onrender.com`
 
-The Sacred Computing Platform exposes a comprehensive API for integrating with other applications, including ChatGPT.
+## Integration with ChatGPT
 
-For detailed API specifications, check out the [OpenAPI specification](openapi.yaml).
+The Sacred Computing Platform is designed to be called by ChatGPT through OpenAI's Actions/Function Calling feature. 
 
-### Key Endpoints
+### Setting Up ChatGPT Integration
 
-- `/api/sacred-geometry/{type}` - Generate sacred geometry patterns (torus, merkaba, metatron, sri-yantra, flower-of-life)
-- `/api/healing-codes` - Access the healing code database
-- `/api/network-packet` - Create network packets with embedded intentions
-- `/api/intention-recommendation` - Get AI-enhanced intention recommendations
-- `/api/healing-recommendation` - Get personalized healing code recommendations
+1. Use the `openapi.yaml` file as your OpenAPI specification in the ChatGPT Actions interface
+2. Set the server URL to your deployed instance (e.g., `https://sacred-computing-platform.onrender.com`)
+3. Configure authentication if needed
 
-## ChatGPT Integration
+### Example ChatGPT Prompts
 
-This platform can be integrated with ChatGPT through custom GPT Actions. The OpenAPI specification file (`openapi.yaml`) defines all the endpoints that ChatGPT can call.
+Once integrated, users can interact with the platform through ChatGPT:
 
-Example custom GPT instructions:
+- "Create a healing intention for my joint pain"
+- "Recommend healing codes for anxiety"
+- "Generate a torus field for abundance" 
+- "Amplify my intention: 'I am at peace with myself'"
 
-```
-You are a Sacred Geometry and Healing expert. You can help users enhance their intentions, find suitable healing codes, and generate sacred geometry patterns.
+## Running in Different Modes
 
-You have access to the Sacred Computing Platform API which allows you to:
-1. Recommend intention phrasings for specific purposes
-2. Generate sacred geometry fields (torus, merkaba, etc.)
-3. Find healing codes for specific conditions
-4. Create energetic network packets with embedded intentions
+The platform supports multiple operational modes:
 
-When users express a need for healing, manifestation, or spiritual growth, offer to use the API to provide personalized recommendations.
-```
-
-## Healing Codes Database
-
-This platform includes an extensive database of healing codes including:
-
-- Grabovoi codes for physical healing
-- Emotional healing frequencies
-- Financial abundance codes
-- Relationship harmony numbers
-- Chakra balancing sequences
+- API mode: `python healing-api.py --mode api`
+- Broadcast mode: `python healing-api.py --mode broadcast --intention "Peace and healing" --field-type torus`
+- CLI mode: `python healing-api.py --mode cli`
 
 ## License
 
@@ -117,6 +96,6 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## Acknowledgments
 
-- Sacred geometry principles from ancient traditions
-- Modern energy healing techniques
-- Quantum physics principles applied to spiritual computing
+- Built with respect for sacred geometry principles and energetic healing modalities
+- Incorporates Grabovoi codes and other numeric healing sequences
+- Designed for seamless integration with AI assistants

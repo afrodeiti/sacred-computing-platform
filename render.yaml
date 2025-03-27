@@ -1,19 +1,14 @@
 services:
+  # API service running the Flask API
   - type: web
-    name: sacred-computing-api
+    name: sacred-computing-platform
     env: python
+    plan: free
     buildCommand: pip install -r python_requirements.txt
-    startCommand: gunicorn -w 4 -k uvicorn.workers.UvicornWorker "healing-api:app" --bind 0.0.0.0:$PORT
+    startCommand: python healing-api.py --mode api
     envVars:
-      - key: PYTHONUNBUFFERED
-        value: true
-      - key: OPENAI_API_KEY
-        sync: false
-      - key: DATABASE_URL
-        fromDatabase:
-          name: sacred-computing-db
-          property: connectionString
-
-databases:
-  - name: sacred-computing-db
-    plan: starter
+      - key: PORT
+        value: 5000
+      - key: PYTHON_VERSION
+        value: 3.9.0
+    healthCheckPath: /api/healing-codes
