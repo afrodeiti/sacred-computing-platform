@@ -1,17 +1,13 @@
-# Core dependencies
-websockets>=10.1
-matplotlib>=3.5.0
-numpy>=1.20.0
-pillow>=9.0.0
-
-# Optional - uncomment if needed
-# cryptography>=36.0.0  # For enhanced encryption capabilities
-# requests>=2.27.0      # For additional network features
-# scipy>=1.7.3          # For advanced mathematical computations
-
-# Server capabilities
-# aiohttp>=3.8.1        # Alternative to built-in http server
-# jinja2>=3.0.0         # For templating if extending web interface
-
-# Database support - SQLite is used by default with the standard library
-# sqlalchemy>=1.4.0     # For advanced database operations
+flask==2.3.3
+flask-cors==4.0.0
+gunicorn==21.2.0
+openai==1.3.5
+numpy==1.25.2
+pycryptodomex==3.18.0
+python-dotenv==1.0.0
+uvicorn==0.23.2
+websockets==11.0.3
+cryptography==41.0.3
+psycopg2-binary==2.9.7
+fuzzywuzzy==0.18.0
+python-Levenshtein==0.21.1

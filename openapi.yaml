@@ -1,4 +1,4 @@
-openapi: 3.0.0
+openapi: 3.1.0
 info:
   title: Sacred Computing Platform API
   description: API for accessing sacred geometry patterns, intentions, and healing codes
@@ -30,6 +30,12 @@ paths:
                   type: number
                   default: 7.83
                   description: Frequency in Hz (Schumann resonance default)
+            examples:
+              healingIntention:
+                summary: Simple healing intention
+                value:
+                  intention: "perfect health and vitality"
+                  frequency: 7.83
       responses:
         '200':
           description: Successful operation
