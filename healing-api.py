@@ -1352,7 +1352,182 @@ if HAS_FLASK:
         except Exception as e:
             return jsonify({"error": str(e)}), 500
 
-    # Other API endpoints for additional functionality...
+    # Additional API endpoints for ChatGPT integration
+
+    @app.route('/api/intention-recommendation', methods=['POST'])
+    def api_intention_recommendation():
+        """API endpoint to get intention recommendation"""
+        data = request.json
+        if not data or 'userInput' not in data:
+            return jsonify({"error": "User input is required"}), 400
+        
+        user_input = data['userInput']
+        context = data.get('context', 'healing')
+        
+        # Based on context, create recommended intention and relevant field
+        if context == 'healing':
+            # For healing, focus on present tense, positive framing
+            recommended = f"I am completely healed and vibrant with {user_input}"
+            field_type = "flower_of_life"
+            frequency = 528  # DNA repair frequency
+            reason = "Healing intentions work best with present tense affirmations and the repair frequency of 528Hz"
+        elif context == 'manifestation':
+            # For manifestation, use torus as it's the creation pattern
+            recommended = f"I am gratefully experiencing {user_input} in my life now"
+            field_type = "torus"
+            frequency = 7.83  # Earth frequency for grounding manifestations
+            reason = "Manifestation intentions work best with gratitude and present tense phrasing"
+        elif context == 'protection':
+            # For protection, use merkaba
+            recommended = f"I am divinely protected from all forms of {user_input}"
+            field_type = "merkaba"
+            frequency = 13.0  # Higher frequency for stronger field
+            reason = "Protection intentions work best with the Merkaba field, which creates a natural energetic boundary"
+        elif context == 'transformation':
+            # For transformation, use metatron's cube
+            recommended = f"I am easily transforming {user_input} with divine grace"
+            field_type = "metatron"
+            frequency = 9.0  # Tesla's completion number
+            reason = "Transformation intentions benefit from Metatron's Cube which connects all platonic solids"
+        elif context == 'connection':
+            # For connection, use Sri Yantra
+            recommended = f"I am deeply connected to {user_input} at all levels of my being"
+            field_type = "sri_yantra"
+            frequency = 7.83  # Schumann resonance for connection
+            reason = "Connection intentions work best with Sri Yantra which represents the cosmos and unity consciousness"
+        else:
+            # Default balanced approach
+            recommended = f"I am in perfect harmony with {user_input}"
+            field_type = "torus"
+            frequency = 7.83
+            reason = "This balanced intention works for general purposes and aligns with Earth's natural frequency"
+        
+        # Return recommendation
+        return jsonify({
+            "original_input": user_input,
+            "recommended_intention": recommended,
+            "reason": reason,
+            "suggested_field_type": field_type,
+            "suggested_frequency": frequency
+        })
+
+    @app.route('/api/healing-recommendation', methods=['POST'])
+    def api_healing_recommendation():
+        """API endpoint to get healing code recommendation"""
+        data = request.json
+        if not data or 'situation' not in data:
+            return jsonify({"error": "Situation description is required"}), 400
+        
+        situation = data['situation'].lower()
+        body_area = data.get('bodyArea', '').lower()
+        emotional_state = data.get('emotionalState', '').lower()
+        
+        # Get all healing codes
+        all_codes = storage.get_healing_codes()
+        
+        # Look for relevant codes based on keywords
+        recommended_codes = []
+        
+        # Search priority based on specificity
+        if body_area:
+            # Physical issue with specific body area
+            body_keywords = {
+                'head': ['headache', 'migraine', 'brain', 'skull', 'mind'],
+                'back': ['spine', 'back pain', 'vertebrae', 'posture'],
+                'heart': ['cardiac', 'chest', 'circulation', 'blood pressure'],
+                'stomach': ['digestion', 'intestine', 'gut', 'abdomen'],
+                'throat': ['voice', 'speech', 'throat chakra', 'thyroid'],
+                'eye': ['vision', 'sight', 'perception'],
+                'ear': ['hearing', 'balance', 'sound'],
+            }
+            
+            for code in all_codes:
+                desc = code['description'].lower()
+                if body_area in desc:
+                    recommended_codes.append(code)
+                else:
+                    # Check related keywords
+                    for area, keywords in body_keywords.items():
+                        if body_area == area:
+                            for keyword in keywords:
+                                if keyword in desc:
+                                    recommended_codes.append(code)
+                                    break
+        
+        # Emotional issues
+        if emotional_state and len(recommended_codes) < 3:
+            emotional_keywords = {
+                'anxiety': ['stress', 'worry', 'tension', 'nervousness'],
+                'depression': ['sadness', 'melancholy', 'grief', 'sorrow'],
+                'anger': ['rage', 'irritation', 'frustration', 'temper'],
+                'fear': ['phobia', 'terror', 'dread', 'insecurity'],
+                'love': ['heart', 'connection', 'relationship', 'bonding'],
+                'confidence': ['self-esteem', 'worth', 'value', 'belief'],
+                'peace': ['calm', 'serenity', 'tranquility', 'quiet']
+            }
+            
+            for code in all_codes:
+                if code in recommended_codes:
+                    continue
+                
+                desc = code['description'].lower()
+                if emotional_state in desc:
+                    recommended_codes.append(code)
+                else:
+                    # Check related keywords
+                    for emotion, keywords in emotional_keywords.items():
+                        if emotional_state == emotion:
+                            for keyword in keywords:
+                                if keyword in desc:
+                                    recommended_codes.append(code)
+                                    break
+        
+        # General situation
+        if len(recommended_codes) < 3:
+            for code in all_codes:
+                if code in recommended_codes:
+                    continue
+                
+                if any(keyword in code['description'].lower() for keyword in situation.split()):
+                    recommended_codes.append(code)
+                    if len(recommended_codes) >= 3:
+                        break
+        
+        # If still not enough, add some general codes
+        if len(recommended_codes) < 2:
+            # Add codes for general wellbeing
+            general_codes = [code for code in all_codes if 
+                            ('general' in code['description'].lower() or
+                             'wellbeing' in code['description'].lower() or
+                             'balance' in code['description'].lower())]
+            
+            for code in general_codes:
+                if code not in recommended_codes:
+                    recommended_codes.append(code)
+                    if len(recommended_codes) >= 3:
+                        break
+        
+        # Generate practice recommendation based on situation
+        if body_area:
+            practice = f"Visualize healing energy flowing to your {body_area} while reciting these codes 3 times daily."
+        elif emotional_state:
+            practice = f"Meditate with these codes for 10 minutes daily to transform your emotional state of {emotional_state}."
+        else:
+            practice = "Recite each code 9 times while visualizing golden light surrounding you."
+        
+        return jsonify({
+            "recommended_codes": recommended_codes[:3],  # Return top 3 recommendations
+            "explanation": f"These codes were selected based on your specific needs related to {situation}",
+            "recommended_practice": practice
+        })
+
+    # CORS support for API access
+    @app.after_request
+    def add_cors_headers(response):
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+        response.headers.add('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS')
+        return response
 
 
 #########################################

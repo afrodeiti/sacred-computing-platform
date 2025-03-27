@@ -1,0 +1,463 @@
+openapi: 3.0.0
+info:
+  title: Sacred Computing Platform API
+  description: API for accessing sacred geometry patterns, intentions, and healing codes
+  version: 1.0.0
+servers:
+  - url: https://your-app-name.onrender.com
+    description: Production server
+  - url: http://localhost:5000
+    description: Local development server
+paths:
+  /api/sacred-geometry/torus:
+    post:
+      summary: Generate a torus field
+      description: Creates a torus field based on an intention and frequency
+      operationId: generateTorusField
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - intention
+              properties:
+                intention:
+                  type: string
+                  description: The intention to embed in the torus field
+                frequency:
+                  type: number
+                  default: 7.83
+                  description: Frequency in Hz (Schumann resonance default)
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TorusField'
+        '400':
+          description: Invalid input
+  /api/sacred-geometry/merkaba:
+    post:
+      summary: Generate a merkaba field
+      description: Creates a merkaba field based on an intention and frequency
+      operationId: generateMerkabaField
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - intention
+              properties:
+                intention:
+                  type: string
+                  description: The intention to embed in the merkaba field
+                frequency:
+                  type: number
+                  default: 7.83
+                  description: Frequency in Hz (Schumann resonance default)
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MerkabaField'
+        '400':
+          description: Invalid input
+  /api/sacred-geometry/metatron:
+    post:
+      summary: Generate Metatron's Cube
+      description: Creates a Metatron's Cube amplifier based on an intention
+      operationId: generateMetatronCube
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - intention
+              properties:
+                intention:
+                  type: string
+                  description: The intention to embed in Metatron's Cube
+                boost:
+                  type: boolean
+                  default: false
+                  description: Whether to activate full Metatronic grid
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MetatronCube'
+        '400':
+          description: Invalid input
+  /api/sacred-geometry/sri-yantra:
+    post:
+      summary: Generate Sri Yantra
+      description: Creates a Sri Yantra pattern based on an intention
+      operationId: generateSriYantra
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - intention
+              properties:
+                intention:
+                  type: string
+                  description: The intention to embed in the Sri Yantra
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SriYantra'
+        '400':
+          description: Invalid input
+  /api/sacred-geometry/flower-of-life:
+    post:
+      summary: Generate Flower of Life
+      description: Creates a Flower of Life pattern based on an intention
+      operationId: generateFlowerOfLife
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - intention
+              properties:
+                intention:
+                  type: string
+                  description: The intention to embed in the Flower of Life
+                duration:
+                  type: integer
+                  default: 60
+                  description: Duration in seconds
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FlowerOfLife'
+        '400':
+          description: Invalid input
+  /api/healing-codes:
+    get:
+      summary: Get healing codes
+      description: Retrieves healing codes, optionally filtered by category or search term
+      operationId: getHealingCodes
+      parameters:
+        - name: category
+          in: query
+          description: Filter by category
+          schema:
+            type: string
+        - name: search
+          in: query
+          description: Search term to filter codes
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/HealingCode'
+  /api/amplify:
+    post:
+      summary: Amplify intention
+      description: Amplifies an intention using divine proportion
+      operationId: amplifyIntention
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - intention
+              properties:
+                intention:
+                  type: string
+                  description: The intention to amplify
+                multiplier:
+                  type: number
+                  default: 1.0
+                  description: Fibonacci multiplier
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  original:
+                    type: string
+                  phi_amplified:
+                    type: string
+                  fibonacci_multiplier:
+                    type: number
+                  metatronic_alignment:
+                    type: number
+        '400':
+          description: Invalid input
+  /api/network-packet:
+    post:
+      summary: Create network packet
+      description: Creates a network packet with embedded intention
+      operationId: createNetworkPacket
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - intention
+              properties:
+                intention:
+                  type: string
+                  description: The intention to embed
+                frequency:
+                  type: number
+                  default: 7.83
+                  description: Frequency in Hz
+                field_type:
+                  type: string
+                  default: torus
+                  enum: [torus, merkaba, metatron, sri_yantra, flower_of_life]
+                  description: Sacred geometry field type
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  packet:
+                    type: object
+                  packet_base64:
+                    type: string
+                    description: Base64 encoded packet
+        '400':
+          description: Invalid input
+  /api/intention-recommendation:
+    post:
+      summary: Get intention recommendation
+      description: Analyzes user input and recommends optimal intention wording
+      operationId: getIntentionRecommendation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - userInput
+              properties:
+                userInput:
+                  type: string
+                  description: The user's original input or desired outcome
+                context:
+                  type: string
+                  enum: [healing, manifestation, protection, transformation, connection]
+                  description: The context or purpose of the intention
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  original_input:
+                    type: string
+                  recommended_intention:
+                    type: string
+                  reason:
+                    type: string
+                  suggested_field_type:
+                    type: string
+                    enum: [torus, merkaba, metatron, sri_yantra, flower_of_life]
+                  suggested_frequency:
+                    type: number
+        '400':
+          description: Invalid input
+  /api/healing-recommendation:
+    post:
+      summary: Get healing code recommendation
+      description: Recommends healing codes based on user's situation
+      operationId: getHealingRecommendation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - situation
+              properties:
+                situation:
+                  type: string
+                  description: Description of user's situation or issue
+                bodyArea:
+                  type: string
+                  description: Specific body area if applicable
+                emotionalState:
+                  type: string
+                  description: Emotional state if relevant
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  recommended_codes:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/HealingCode'
+                  explanation:
+                    type: string
+                  recommended_practice:
+                    type: string
+        '400':
+          description: Invalid input
+
+components:
+  schemas:
+    TorusField:
+      type: object
+      properties:
+        intention:
+          type: string
+        torus_frequency:
+          type: number
+        schumann_ratio:
+          type: string
+        inner_flow:
+          type: string
+        outer_flow:
+          type: string
+        phase_angle:
+          type: number
+        coherence:
+          type: string
+        tesla_node:
+          type: number
+        activation_sequence:
+          type: string
+    MerkabaField:
+      type: object
+      properties:
+        intention:
+          type: string
+        tetra_up:
+          type: string
+        tetra_down:
+          type: string
+        merkaba_frequency:
+          type: number
+        solfeggio_alignment:
+          type: number
+        field_intensity:
+          type: number
+        activation_code:
+          type: string
+    MetatronCube:
+      type: object
+      properties:
+        intention:
+          type: string
+        metatron_code:
+          type: string
+        harmonic:
+          type: number
+        platonic_solids:
+          type: object
+          properties:
+            tetrahedron:
+              type: string
+            hexahedron:
+              type: string
+            octahedron:
+              type: string
+            dodecahedron:
+              type: string
+            icosahedron:
+              type: string
+        activation_key:
+          type: string
+    SriYantra:
+      type: object
+      properties:
+        intention:
+          type: string
+        triangles:
+          type: array
+          items:
+            type: string
+        bindu:
+          type: string
+        circuits:
+          type: array
+          items:
+            type: string
+        inner_triangle:
+          type: string
+        outer_triangle:
+          type: string
+        yantra_code:
+          type: string
+    FlowerOfLife:
+      type: object
+      properties:
+        intention:
+          type: string
+        flower_pattern:
+          type: string
+        planetary_alignment:
+          type: string
+        cosmic_degree:
+          type: number
+        optimal_duration:
+          type: number
+        vesica_pisces_code:
+          type: string
+    HealingCode:
+      type: object
+      properties:
+        id:
+          type: integer
+        code:
+          type: string
+        description:
+          type: string
+        category:
+          type: string
+        affirmation:
+          type: string
+        vibration:
+          type: integer
+        source:
+          type: string
