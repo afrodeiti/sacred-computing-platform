@@ -89,7 +89,7 @@ export default function IntentionInput() {
         </div>
         
         <Button 
-          onClick={sendIntention}
+          onClick={() => sendIntention()}
           className="w-full bg-gradient-to-r from-violet-500 to-blue-500 hover:opacity-90 transition-opacity"
         >
           Send Intention
