@@ -1,14 +1,22 @@
 services:
-  # API service running the Flask API
+  # Full-stack JavaScript application
   - type: web
     name: sacred-computing-platform
-    env: python
+    env: node
     plan: free
-    buildCommand: pip install -r python_requirements.txt
-    startCommand: python healing-api.py --mode api
+    buildCommand: npm ci && npm run build
+    startCommand: npm start
     envVars:
       - key: PORT
         value: 5000
-      - key: PYTHON_VERSION
-        value: 3.9.0
+      - key: NODE_VERSION
+        value: 18.x
+      - key: DATABASE_URL
+        fromDatabase:
+          name: sacred-computing-db
+          property: connectionString
     healthCheckPath: /api/healing-codes
+
+databases:
+  - name: sacred-computing-db
+    plan: free
