@@ -10,6 +10,11 @@ import {
   torusFieldGenerator,
   sriYantraEncoder
 } from "./sacred-geometry";
+import { 
+  embedIntentionInNetworkPacket, 
+  PacketType,
+  encodeIntentionPacket 
+} from "./network-packet";
 import { z } from "zod";
 import { insertSoulArchiveSchema } from "@shared/schema";
 
@@ -24,17 +29,37 @@ type WSMessageType =
   | "METATRON"
   | "SRI_YANTRA"
   | "FLOWER_OF_LIFE"
+  | "NETWORK_PACKET"
   | "SYSTEM";
 
 interface WSMessage {
   type: WSMessageType;
   data: any;
   timestamp: string;
+  packetData?: string; // For network packet transmissions
 }
 
 // Send message to all connected clients
-function broadcastMessage(message: WSMessage) {
+async function broadcastMessage(message: WSMessage) {
+  // Check if this is an intention that should be embedded in network packets
+  if (message.type === "INTENTION" && message.data.intention) {
+    try {
+      // Embed intention in network packet format
+      const packetData = await embedIntentionInNetworkPacket(
+        message.data.intention,
+        message.data.frequency || 7.83
+      );
+      
+      // Add the packet data to the message
+      message.packetData = packetData;
+    } catch (error) {
+      console.error("Failed to embed intention in network packet:", error);
+    }
+  }
+  
   const messageStr = JSON.stringify(message);
+  
+  // Broadcast to all connected clients
   clients.forEach(client => {
     if (client.readyState === WebSocket.OPEN) {
       client.send(messageStr);
