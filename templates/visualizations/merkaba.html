@@ -1,0 +1,308 @@
+{% extends "layout.html" %}
+
+{% block title %}Merkaba Field Visualization{% endblock %}
+
+{% block additional_styles %}
+.info-panel {
+    background: rgba(17, 24, 39, 0.8);
+    border-radius: 8px;
+    border: 1px solid rgba(139, 92, 246, 0.2);
+}
+.intention-display {
+    background: linear-gradient(135deg, rgba(124, 58, 237, 0.1) 0%, rgba(168, 85, 247, 0.1) 100%);
+    border-radius: 8px;
+    border: 1px solid rgba(139, 92, 246, 0.3);
+}
+{% endblock %}
+
+{% block content %}
+<div class="mb-6">
+    <h2 class="text-3xl font-bold mb-2 text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-violet-500">
+        Merkaba Field Visualization
+    </h2>
+    <p class="text-gray-300">
+        The Merkaba is a powerful sacred geometry configuration consisting of two interlocked tetrahedra.
+        It represents the divine light vehicle used by ascended masters to connect with higher realms
+        and is a potent tool for spiritual transformation and consciousness expansion.
+    </p>
+</div>
+
+<div class="flex flex-col lg:flex-row gap-6">
+    <div class="lg:w-2/3">
+        <div class="visualization-container bg-black">
+            <canvas id="merkabaCanvas" class="visualization-canvas"></canvas>
+        </div>
+    </div>
+    
+    <div class="lg:w-1/3">
+        <div class="info-panel p-4 mb-4">
+            <h3 class="text-xl font-bold mb-2 text-purple-400">Field Properties</h3>
+            
+            <div class="mb-3">
+                <label class="block text-sm font-medium text-gray-400 mb-1">Intention</label>
+                <div class="intention-display p-3 text-white">
+                    {{ intention|default:"Spiritual awakening and ascension" }}
+                </div>
+            </div>
+            
+            <div class="mb-3">
+                <label class="block text-sm font-medium text-gray-400 mb-1">Frequency</label>
+                <div class="flex items-center">
+                    <span class="text-white font-mono">{{ frequency|default:"7.83" }} Hz</span>
+                    <span class="ml-2 text-xs text-purple-400">(Schumann Resonance)</span>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-2 mt-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-400 mb-1">Tetrahedron Up</label>
+                    <span class="text-white">{{ tetra_up|default:"Masculine" }}</span>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-400 mb-1">Tetrahedron Down</label>
+                    <span class="text-white">{{ tetra_down|default:"Feminine" }}</span>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-400 mb-1">Solfeggio Alignment</label>
+                    <span class="text-white">{{ solfeggio_alignment|default:"528" }} Hz</span>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-400 mb-1">Field Intensity</label>
+                    <span class="text-white">{{ field_intensity|default:"87.5" }}%</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="p-4 bg-gray-800 rounded-lg">
+            <h3 class="text-xl font-bold mb-2 text-purple-400">Effects & Benefits</h3>
+            <ul class="list-disc list-inside text-gray-300 space-y-1">
+                <li>Activates higher dimensional consciousness</li>
+                <li>Balances masculine and feminine energies</li>
+                <li>Provides powerful spiritual protection</li>
+                <li>Facilitates energy body activation</li>
+                <li>Accelerates manifestation and healing</li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Get the canvas element
+        const canvas = document.getElementById('merkabaCanvas');
+        
+        // Initialize the renderer
+        const renderer = new THREE.WebGLRenderer({
+            canvas: canvas,
+            antialias: true,
+            alpha: true
+        });
+        renderer.setSize(canvas.clientWidth, canvas.clientHeight);
+        renderer.setClearColor(0x000000, 1);
+        
+        // Create a scene
+        const scene = new THREE.Scene();
+        
+        // Setup camera
+        const camera = new THREE.PerspectiveCamera(75, canvas.clientWidth / canvas.clientHeight, 0.1, 1000);
+        camera.position.z = 5;
+        
+        // Add orbit controls
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+        
+        // Create the upward tetrahedron (masculine)
+        const tetraGeometryUp = new THREE.TetrahedronGeometry(2);
+        const tetraMaterialUp = new THREE.MeshPhongMaterial({
+            color: 0x7C3AED,
+            emissive: 0x5B21B6,
+            emissiveIntensity: 0.3,
+            shininess: 90,
+            transparent: true,
+            opacity: 0.7,
+            wireframe: true,
+            wireframeLinewidth: 2
+        });
+        const tetraUp = new THREE.Mesh(tetraGeometryUp, tetraMaterialUp);
+        scene.add(tetraUp);
+        
+        // Create the downward tetrahedron (feminine)
+        const tetraGeometryDown = new THREE.TetrahedronGeometry(2);
+        const tetraMaterialDown = new THREE.MeshPhongMaterial({
+            color: 0x9333EA,
+            emissive: 0x7E22CE,
+            emissiveIntensity: 0.3,
+            shininess: 90,
+            transparent: true,
+            opacity: 0.7,
+            wireframe: true,
+            wireframeLinewidth: 2
+        });
+        const tetraDown = new THREE.Mesh(tetraGeometryDown, tetraMaterialDown);
+        tetraDown.rotation.x = Math.PI; // Rotate 180 degrees to point downward
+        scene.add(tetraDown);
+        
+        // Create solid faces for the tetrahedrons
+        const tetraSolidGeometryUp = new THREE.TetrahedronGeometry(1.9);
+        const tetraSolidMaterialUp = new THREE.MeshPhongMaterial({
+            color: 0x7C3AED,
+            transparent: true,
+            opacity: 0.2,
+            side: THREE.DoubleSide
+        });
+        const tetraSolidUp = new THREE.Mesh(tetraSolidGeometryUp, tetraSolidMaterialUp);
+        scene.add(tetraSolidUp);
+        
+        const tetraSolidGeometryDown = new THREE.TetrahedronGeometry(1.9);
+        const tetraSolidMaterialDown = new THREE.MeshPhongMaterial({
+            color: 0x9333EA,
+            transparent: true,
+            opacity: 0.2,
+            side: THREE.DoubleSide
+        });
+        const tetraSolidDown = new THREE.Mesh(tetraSolidGeometryDown, tetraSolidMaterialDown);
+        tetraSolidDown.rotation.x = Math.PI; // Rotate 180 degrees to point downward
+        scene.add(tetraSolidDown);
+        
+        // Add lights
+        const ambientLight = new THREE.AmbientLight(0x333333);
+        scene.add(ambientLight);
+        
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+        directionalLight.position.set(5, 3, 5);
+        scene.add(directionalLight);
+        
+        // Add a sphere in the center
+        const sphereGeometry = new THREE.SphereGeometry(0.5, 32, 32);
+        const sphereMaterial = new THREE.MeshPhongMaterial({
+            color: 0xA78BFA,
+            emissive: 0x8B5CF6,
+            emissiveIntensity: 0.5,
+            transparent: true,
+            opacity: 0.8
+        });
+        const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
+        scene.add(sphere);
+        
+        // Add particle system for energy
+        const particleCount = 500;
+        const particles = new THREE.BufferGeometry();
+        const positions = new Float32Array(particleCount * 3);
+        const particleSizes = new Float32Array(particleCount);
+        
+        // Position particles in a spherical volume
+        for (let i = 0; i < particleCount; i++) {
+            // Use spherical coordinates
+            const radius = 1.5 + Math.random() * 1.5; // Between 1.5 and 3
+            const theta = Math.random() * Math.PI * 2; // Around the equator
+            const phi = Math.acos(2 * Math.random() - 1); // From pole to pole
+            
+            // Convert to Cartesian coordinates
+            positions[i * 3] = radius * Math.sin(phi) * Math.cos(theta);
+            positions[i * 3 + 1] = radius * Math.sin(phi) * Math.sin(theta);
+            positions[i * 3 + 2] = radius * Math.cos(phi);
+            
+            particleSizes[i] = Math.random() * 0.05 + 0.02;
+        }
+        
+        particles.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+        particles.setAttribute('size', new THREE.BufferAttribute(particleSizes, 1));
+        
+        // Create particle material
+        const particleMaterial = new THREE.ShaderMaterial({
+            uniforms: {
+                time: { value: 0 },
+                color: { value: new THREE.Color(0xD8B4FE) }
+            },
+            vertexShader: `
+                attribute float size;
+                uniform float time;
+                varying vec3 vColor;
+                
+                void main() {
+                    vec3 pos = position;
+                    
+                    // Add motion based on time
+                    float phase = time * 7.83 * 0.1;
+                    float displacement = sin(phase + position.x) * sin(phase + position.y) * sin(phase + position.z) * 0.1;
+                    
+                    vec3 newPos = pos * (1.0 + displacement);
+                    
+                    vec4 mvPosition = modelViewMatrix * vec4(newPos, 1.0);
+                    gl_PointSize = size * (300.0 / -mvPosition.z);
+                    gl_Position = projectionMatrix * mvPosition;
+                    
+                    // Color variation
+                    vColor = vec3(0.85, 0.7, 1.0);  // Light purple
+                }
+            `,
+            fragmentShader: `
+                varying vec3 vColor;
+                
+                void main() {
+                    // Draw circular particles
+                    vec2 center = gl_PointCoord - vec2(0.5);
+                    float dist = length(center);
+                    float alpha = smoothstep(0.5, 0.4, dist);
+                    
+                    gl_FragColor = vec4(vColor, alpha);
+                }
+            `,
+            transparent: true,
+            blending: THREE.AdditiveBlending,
+            depthWrite: false
+        });
+        
+        // Create the particle system
+        const particleSystem = new THREE.Points(particles, particleMaterial);
+        scene.add(particleSystem);
+        
+        // Animation loop
+        const clock = new THREE.Clock();
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            const delta = clock.getDelta();
+            const time = clock.getElapsedTime();
+            
+            // Rotate the tetrahedrons in opposite directions
+            tetraUp.rotation.y += 0.2 * delta;
+            tetraSolidUp.rotation.y += 0.2 * delta;
+            
+            tetraDown.rotation.y -= 0.2 * delta;
+            tetraSolidDown.rotation.y -= 0.2 * delta;
+            
+            // Pulse the sphere
+            const freq = 7.83;
+            const pulseScale = 1 + Math.sin(time * freq * 0.2) * 0.1;
+            sphere.scale.set(pulseScale, pulseScale, pulseScale);
+            
+            // Update particle system
+            particleMaterial.uniforms.time.value = time;
+            
+            // Update controls
+            controls.update();
+            
+            // Render the scene
+            renderer.render(scene, camera);
+        }
+        
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            const width = canvas.clientWidth;
+            const height = canvas.clientHeight;
+            
+            camera.aspect = width / height;
+            camera.updateProjectionMatrix();
+            
+            renderer.setSize(width, height);
+        });
+        
+        // Start animation
+        animate();
+    });
+</script>
+{% endblock %}

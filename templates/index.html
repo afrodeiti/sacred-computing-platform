@@ -1,0 +1,82 @@
+{% extends "layout.html" %}
+
+{% block title %}Sacred Computing Platform{% endblock %}
+
+{% block content %}
+<div class="text-center">
+    <h2 class="text-3xl font-bold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-blue-500">
+        Welcome to the Sacred Computing Platform
+    </h2>
+    <p class="text-lg mb-8 text-gray-300">
+        Explore sacred geometry patterns, healing codes, and energetic resonance fields
+    </p>
+</div>
+
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
+    <div class="bg-gray-800 bg-opacity-60 p-6 rounded-lg hover:bg-opacity-80 transition duration-300">
+        <h3 class="text-xl font-semibold mb-3 text-blue-400">Sacred Geometry Visualizations</h3>
+        <p class="text-gray-300 mb-4">Explore interactive 3D visualizations of sacred geometry patterns</p>
+        <div class="grid grid-cols-2 gap-3">
+            <a href="/visualize/torus" class="block p-3 bg-indigo-900 bg-opacity-50 rounded hover:bg-opacity-70 transition">
+                <span class="font-medium">Torus Field</span>
+            </a>
+            <a href="/visualize/merkaba" class="block p-3 bg-indigo-900 bg-opacity-50 rounded hover:bg-opacity-70 transition">
+                <span class="font-medium">Merkaba</span>
+            </a>
+            <a href="/visualize/metatron" class="block p-3 bg-indigo-900 bg-opacity-50 rounded hover:bg-opacity-70 transition">
+                <span class="font-medium">Metatron's Cube</span>
+            </a>
+            <a href="/visualize/sri-yantra" class="block p-3 bg-indigo-900 bg-opacity-50 rounded hover:bg-opacity-70 transition">
+                <span class="font-medium">Sri Yantra</span>
+            </a>
+            <a href="/visualize/flower-of-life" class="block p-3 bg-indigo-900 bg-opacity-50 rounded hover:bg-opacity-70 transition col-span-2">
+                <span class="font-medium">Flower of Life</span>
+            </a>
+        </div>
+    </div>
+    
+    <div class="bg-gray-800 bg-opacity-60 p-6 rounded-lg hover:bg-opacity-80 transition duration-300">
+        <h3 class="text-xl font-semibold mb-3 text-purple-400">Healing Resources</h3>
+        <p class="text-gray-300 mb-4">Access healing codes and sacred intentions for wellness</p>
+        <div class="space-y-3">
+            <a href="/healing-codes" class="block p-3 bg-purple-900 bg-opacity-50 rounded hover:bg-opacity-70 transition">
+                <span class="font-medium">Healing Codes Database</span>
+            </a>
+            <a href="/network-packet" class="block p-3 bg-purple-900 bg-opacity-50 rounded hover:bg-opacity-70 transition">
+                <span class="font-medium">Intention Network Broadcaster</span>
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="bg-blue-900 bg-opacity-20 p-6 rounded-lg">
+    <h3 class="text-xl font-semibold mb-4 text-center text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-blue-500">API Integration</h3>
+    <p class="text-gray-300 mb-4 text-center">
+        This platform provides API endpoints for integration with ChatGPT and other systems.
+    </p>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="bg-gray-800 bg-opacity-50 p-4 rounded">
+            <h4 class="font-medium text-blue-300 mb-2">Sacred Geometry Endpoints</h4>
+            <ul class="text-gray-400 text-sm space-y-1">
+                <li>/api/sacred-geometry/torus</li>
+                <li>/api/sacred-geometry/merkaba</li>
+                <li>/api/sacred-geometry/metatron</li>
+                <li>/api/sacred-geometry/sri-yantra</li>
+                <li>/api/sacred-geometry/flower-of-life</li>
+                <li>/api/sacred-geometry/platonic-solid</li>
+            </ul>
+        </div>
+        <div class="bg-gray-800 bg-opacity-50 p-4 rounded">
+            <h4 class="font-medium text-blue-300 mb-2">Healing Resources Endpoints</h4>
+            <ul class="text-gray-400 text-sm space-y-1">
+                <li>/api/healing-codes</li>
+                <li>/api/amplify</li>
+                <li>/api/network-packet</li>
+                <li>/api/soul-archives</li>
+                <li>/api/past-life-insights</li>
+                <li>/api/environmental-anchors</li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

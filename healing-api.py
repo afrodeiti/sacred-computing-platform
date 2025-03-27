@@ -1098,11 +1098,120 @@ if HAS_FLASK:
     app = Flask(__name__)
     storage = SacredStorage()
 
+    # === Web Frontend Routes ===
     @app.route('/')
     def index():
         """Render the main page of the Sacred Healing API"""
         return render_template('index.html')
-
+    
+    @app.route('/visualize/torus')
+    def visualize_torus():
+        """Render torus field visualization page"""
+        intention = request.args.get('intention', 'Perfect health and vitality')
+        frequency = request.args.get('frequency', SCHUMANN_RESONANCE)
+        
+        # Generate torus data if not provided
+        torus_data = SacredGeometryCalculator.torus_field_generator(intention, float(frequency))
+        
+        return render_template('visualizations/torus.html', 
+                              intention=intention,
+                              frequency=frequency,
+                              inner_flow=torus_data.get('inner_flow'),
+                              outer_flow=torus_data.get('outer_flow'),
+                              phase_angle=torus_data.get('phase_angle'),
+                              coherence=torus_data.get('coherence'))
+    
+    @app.route('/visualize/merkaba')
+    def visualize_merkaba():
+        """Render merkaba field visualization page"""
+        intention = request.args.get('intention', 'Spiritual awakening and ascension')
+        frequency = request.args.get('frequency', SCHUMANN_RESONANCE)
+        
+        # Generate merkaba data if not provided
+        merkaba_data = SacredGeometryCalculator.merkaba_field_generator(intention, float(frequency))
+        
+        return render_template('visualizations/merkaba.html',
+                              intention=intention,
+                              frequency=frequency,
+                              tetra_up=merkaba_data.get('tetra_up'),
+                              tetra_down=merkaba_data.get('tetra_down'),
+                              solfeggio_alignment=merkaba_data.get('solfeggio_alignment'),
+                              field_intensity=merkaba_data.get('field_intensity'))
+    
+    @app.route('/visualize/metatron')
+    def visualize_metatron():
+        """Render Metatron's Cube visualization page"""
+        intention = request.args.get('intention', 'Divine geometry activation')
+        boost = request.args.get('boost', 'false').lower() == 'true'
+        
+        # Generate metatron data
+        metatron_data = SacredGeometryCalculator.metatrons_cube_amplifier(intention, boost)
+        
+        return render_template('visualizations/metatron.html',
+                              intention=intention,
+                              boost=boost,
+                              metatron_code=metatron_data.get('metatron_code'),
+                              harmonic=metatron_data.get('harmonic'),
+                              platonic_solids=metatron_data.get('platonic_solids'))
+    
+    @app.route('/visualize/sri-yantra')
+    def visualize_sri_yantra():
+        """Render Sri Yantra visualization page"""
+        intention = request.args.get('intention', 'Cosmic manifestation')
+        
+        # Generate Sri Yantra data
+        yantra_data = SacredGeometryCalculator.sri_yantra_encoder(intention)
+        
+        return render_template('visualizations/sri-yantra.html',
+                              intention=intention,
+                              triangles=yantra_data.get('triangles'),
+                              bindu=yantra_data.get('bindu'),
+                              circuits=yantra_data.get('circuits'),
+                              yantra_code=yantra_data.get('yantra_code'))
+    
+    @app.route('/visualize/flower-of-life')
+    def visualize_flower_of_life():
+        """Render Flower of Life visualization page"""
+        intention = request.args.get('intention', 'Universal harmony')
+        duration = request.args.get('duration', 60)
+        
+        # Generate Flower of Life data
+        flower_data = SacredGeometryCalculator.flower_of_life_pattern(intention, int(duration))
+        
+        return render_template('visualizations/flower-of-life.html',
+                              intention=intention,
+                              duration=duration,
+                              flower_pattern=flower_data.get('flower_pattern'),
+                              planetary_alignment=flower_data.get('planetary_alignment'),
+                              cosmic_degree=flower_data.get('cosmic_degree'))
+    
+    @app.route('/healing-codes')
+    def healing_codes_page():
+        """Render healing codes page"""
+        category = request.args.get('category')
+        search = request.args.get('search')
+        
+        if search:
+            codes = storage.search_healing_codes(search)
+        elif category:
+            codes = storage.get_healing_codes_by_category(category)
+        else:
+            codes = storage.get_healing_codes()
+            
+        categories = set(code.get('category', 'Uncategorized') for code in codes)
+        
+        return render_template('healing-codes.html',
+                              codes=codes,
+                              categories=categories,
+                              selected_category=category,
+                              search_query=search)
+    
+    @app.route('/network-packet')
+    def network_packet_page():
+        """Render network packet creation page"""
+        return render_template('network-packet.html')
+    
+    # === API Endpoints ===
     @app.route('/api/healing-codes', methods=['GET'])
     def api_healing_codes():
         """API endpoint to get healing codes"""
