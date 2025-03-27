@@ -206,6 +206,134 @@ class OpenAIHandler:
             logger.error(f"Error parsing OpenAI response: {str(e)}")
             return self._fallback_intention_enhancement(original_intention, context)
     
+    def semantic_healing_code_match(self, user_issue: str, healing_codes: List[Dict[str, Any]], limit: int = 5) -> List[Dict[str, Any]]:
+        """
+        Match a user's health issue semantically with appropriate healing codes
+        
+        Args:
+            user_issue: The health issue or concern described by the user
+            healing_codes: List of healing code dictionaries from the database
+            limit: Maximum number of results to return
+            
+        Returns:
+            List of healing codes sorted by relevance to the user's issue
+        """
+        if not self.enabled or not healing_codes:
+            # Return basic keyword matching if OpenAI is not available
+            return self._fallback_semantic_match(user_issue, healing_codes, limit)
+        
+        try:
+            # Prepare a condensed version of healing codes for the prompt
+            code_info = []
+            for code in healing_codes[:100]:  # Limit to first 100 to keep prompt size reasonable
+                code_info.append({
+                    "id": code.get("id"),
+                    "code": code.get("code"),
+                    "description": code.get("description"),
+                    "category": code.get("category", "UNCATEGORIZED")
+                })
+            
+            # Build a prompt to find the most relevant codes
+            prompt = f"""
+            The user is seeking healing codes for the following health issue or concern:
+            
+            "{user_issue}"
+            
+            Here is a database of healing codes. Please identify the 5 most semantically relevant 
+            healing codes for this issue, based on the descriptions and intended purposes:
+            
+            {json.dumps(code_info, indent=2)}
+            
+            Return ONLY a JSON array with the most relevant healing code IDs, ranked by relevance.
+            The format should be:
+            [ID1, ID2, ID3, ID4, ID5]
+            
+            Do not include any explanation or other text, ONLY the JSON array.
+            """
+            
+            response = self.client.chat.completions.create(
+                model="gpt-4-turbo",
+                messages=[
+                    {"role": "system", "content": "You are a semantic matching system that connects health issues with the most relevant healing codes based on meaning and context, not just keywords."},
+                    {"role": "user", "content": prompt}
+                ],
+                temperature=0.3,
+                max_tokens=100
+            )
+            
+            # Extract the array of IDs from the response
+            result_text = response.choices[0].message.content.strip()
+            
+            # Clean up response if needed to ensure it's valid JSON
+            result_text = result_text.replace("```json", "").replace("```", "").strip()
+            
+            # Parse the result
+            try:
+                relevant_ids = json.loads(result_text)
+                if not isinstance(relevant_ids, list):
+                    raise ValueError("Expected list result")
+                
+                # Get the full code objects for these IDs
+                result_codes = []
+                id_to_code = {code.get("id"): code for code in healing_codes}
+                
+                for code_id in relevant_ids:
+                    if code_id in id_to_code:
+                        result_codes.append(id_to_code[code_id])
+                        if len(result_codes) >= limit:
+                            break
+                
+                # If we didn't get enough results, add more from the original list
+                if len(result_codes) < limit:
+                    for code in healing_codes:
+                        if code not in result_codes:
+                            result_codes.append(code)
+                            if len(result_codes) >= limit:
+                                break
+                
+                return result_codes
+                
+            except json.JSONDecodeError:
+                logger.error(f"Could not parse OpenAI response as JSON: {result_text}")
+                return self._fallback_semantic_match(user_issue, healing_codes, limit)
+            
+        except Exception as e:
+            logger.error(f"Error in semantic healing code matching: {str(e)}")
+            return self._fallback_semantic_match(user_issue, healing_codes, limit)
+            
+    def _fallback_semantic_match(self, user_issue: str, healing_codes: List[Dict[str, Any]], limit: int = 5) -> List[Dict[str, Any]]:
+        """Simple keyword-based fallback when OpenAI is unavailable"""
+        # Convert user issue to lowercase for case-insensitive matching
+        user_issue_lower = user_issue.lower()
+        
+        # Split into words for better matching
+        keywords = [word.strip() for word in user_issue_lower.split() if len(word.strip()) > 3]
+        
+        # Score each code based on keyword matches
+        scored_codes = []
+        for code in healing_codes:
+            score = 0
+            description = code.get("description", "").lower()
+            category = code.get("category", "").lower()
+            
+            # Check for exact phrase match (highest score)
+            if user_issue_lower in description:
+                score += 10
+                
+            # Check for keyword matches
+            for keyword in keywords:
+                if keyword in description:
+                    score += 2
+                if keyword in category:
+                    score += 1
+            
+            # Add to scored list
+            scored_codes.append((score, code))
+        
+        # Sort by score (descending) and return top matches
+        scored_codes.sort(reverse=True, key=lambda x: x[0])
+        return [code for score, code in scored_codes[:limit]]
+    
     def _fallback_intention_enhancement(self, original_intention: str, context: str) -> Dict[str, Any]:
         """Provide a fallback response when OpenAI is unavailable"""
         # Context-specific fallback responses

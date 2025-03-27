@@ -57,6 +57,12 @@ except ImportError:
     HAS_FUZZY_SEARCH = False
 
 try:
+    from openai_handler import OpenAIHandler
+    HAS_OPENAI_HANDLER = True
+except ImportError:
+    HAS_OPENAI_HANDLER = False
+
+try:
     import numpy as np
     import matplotlib
     matplotlib.use('Agg')  # Non-interactive backend
@@ -1168,6 +1174,15 @@ class SacredStorage:
 if HAS_FLASK:
     app = Flask(__name__)
     storage = SacredStorage()
+    
+    # Initialize OpenAI handler if available
+    openai_handler = None
+    if HAS_OPENAI_HANDLER:
+        openai_handler = OpenAIHandler()
+        if openai_handler.enabled:
+            logger.info("OpenAI handler initialized successfully for semantic matching")
+        else:
+            logger.warning("OpenAI handler initialized but API key not available or invalid")
 
     # === Web Frontend Routes ===
     @app.route('/')
@@ -1544,6 +1559,12 @@ if HAS_FLASK:
         user_input = data['userInput']
         context = data.get('context', 'healing')
         
+        # Use OpenAI handler if available
+        if openai_handler and openai_handler.enabled:
+            result = openai_handler.enhance_intention(user_input, context)
+            return jsonify(result)
+        
+        # Fallback to basic intention enhancement if OpenAI is not available
         # Based on context, create recommended intention and relevant field
         if context == 'healing':
             # For healing, focus on present tense, positive framing
@@ -1590,6 +1611,44 @@ if HAS_FLASK:
             "suggested_field_type": field_type,
             "suggested_frequency": frequency
         })
+
+    @app.route('/api/healing-codes/semantic', methods=['POST'])
+    def api_semantic_healing_codes():
+        """API endpoint to semantically search healing codes based on an issue description"""
+        data = request.json
+        if not data or 'issue' not in data:
+            return jsonify({"error": "Issue description is required"}), 400
+        
+        user_issue = data['issue']
+        limit = int(data.get('limit', 5))  # Number of results to return
+        
+        # Get all healing codes
+        all_codes = storage.get_healing_codes()
+        
+        # If OpenAI is available, use semantic matching
+        if openai_handler and openai_handler.enabled:
+            # Use the semantic matching function to find relevant codes
+            matched_codes = openai_handler.semantic_healing_code_match(user_issue, all_codes, limit)
+            
+            # Generate a recommendation based on the issue
+            practice = "Recite each code 9 times daily while focusing on your intention of healing."
+            
+            return jsonify({
+                "matched_codes": matched_codes,
+                "semantic_match": True,
+                "explanation": f"These codes were semantically matched to your issue: {user_issue}",
+                "recommended_practice": practice
+            })
+        else:
+            # Fallback to keyword search if OpenAI is not available
+            search_results = storage.search_healing_codes(user_issue)
+            
+            return jsonify({
+                "matched_codes": search_results[:limit],
+                "semantic_match": False,
+                "explanation": "Basic keyword matching was used. For semantic matching, enable OpenAI integration.",
+                "recommended_practice": "Recite each code 9 times daily."
+            })
 
     @app.route('/api/healing-recommendation', methods=['POST'])
     def api_healing_recommendation():

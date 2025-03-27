@@ -159,4 +159,77 @@ export class MemStorage implements IStorage {
   }
 }
 
+// DrizzleStorage implementation for PostgreSQL
+export class DrizzleStorage implements IStorage {
+  private db: any;
+
+  constructor(db: any) {
+    this.db = db;
+  }
+  
+  // User methods
+  async getUser(id: number): Promise<User | undefined> {
+    const result = await this.db.select().from(users).where({ id }).limit(1);
+    return result[0];
+  }
+
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    const result = await this.db.select().from(users).where({ username }).limit(1);
+    return result[0];
+  }
+
+  async createUser(insertUser: InsertUser): Promise<User> {
+    const result = await this.db.insert(users).values(insertUser).returning();
+    return result[0];
+  }
+  
+  // Soul Archive methods
+  async getSoulArchives(): Promise<SoulArchive[]> {
+    return await this.db.select().from(soulArchive).orderBy(({ desc }: { desc: any }) => [desc(soulArchive.created_at)]);
+  }
+  
+  async getSoulArchiveById(id: number): Promise<SoulArchive | undefined> {
+    const result = await this.db.select().from(soulArchive).where({ id }).limit(1);
+    return result[0];
+  }
+  
+  async createSoulArchive(archive: InsertSoulArchive): Promise<SoulArchive> {
+    const result = await this.db.insert(soulArchive).values(archive).returning();
+    return result[0];
+  }
+  
+  async deleteSoulArchive(id: number): Promise<boolean> {
+    const result = await this.db.delete(soulArchive).where({ id }).returning();
+    return result.length > 0;
+  }
+  
+  // Healing Code methods
+  async getHealingCodes(): Promise<HealingCode[]> {
+    return await this.db.select().from(healingCode);
+  }
+  
+  async getHealingCodesByCategory(category: string): Promise<HealingCode[]> {
+    return await this.db.select().from(healingCode).where({ category });
+  }
+  
+  async searchHealingCodes(query: string): Promise<HealingCode[]> {
+    if (!query) return this.getHealingCodes();
+    
+    const lowercaseQuery = `%${query.toLowerCase()}%`;
+    return await this.db.select().from(healingCode)
+      .where(({ or, sql }: { or: any, sql: any }) => or([
+        sql`LOWER(${healingCode.code}) LIKE ${lowercaseQuery}`,
+        sql`LOWER(${healingCode.description}) LIKE ${lowercaseQuery}`,
+        sql`LOWER(${healingCode.category}) LIKE ${lowercaseQuery}`
+      ]));
+  }
+  
+  async createHealingCode(code: InsertHealingCode): Promise<HealingCode> {
+    const result = await this.db.insert(healingCode).values(code).returning();
+    return result[0];
+  }
+}
+
+// Use MemStorage for development
+// In production, use DrizzleStorage with the database connection
 export const storage = new MemStorage();

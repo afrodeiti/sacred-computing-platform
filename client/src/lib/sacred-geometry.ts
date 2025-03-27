@@ -1,209 +1,349 @@
-// Helper functions for sacred geometry calculations and visualizations
+import { PHI, SCHUMANN_RESONANCE } from "./constants";
 
-// Golden Ratio (Phi)
-export const PHI = (1 + Math.sqrt(5)) / 2; // 1.618...
+// Sacred geometry field types
+export type FieldType = "torus" | "merkaba" | "metatron" | "sri_yantra" | "flower_of_life" | "platonic_solid";
 
-// Sacred Number Sequences
-export const FIBONACCI = [1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233, 377, 610, 987];
-export const METATRON = [3, 6, 9, 12, 15, 18, 21, 24, 27, 30, 33, 36, 39, 42, 45, 48]; // Tesla's "3-6-9" sequence
-export const SOLFEGGIO = [396, 417, 528, 639, 741, 852, 963]; // Solfeggio frequencies
+// Sacred geometry field data interfaces
+export interface TorusField {
+  frequency: number;
+  radius: number;
+  inner_radius: number;
+  rotation_speed: number;
+  quantum_signature: string;
+  intention_hash: string;
+  field_strength: number;
+  color_spectrum: string[];
+  resonance_points: {x: number, y: number, z: number}[];
+}
 
-// Generate points for a torus
-export function generateTorusPoints(
-  R: number = 100, // Large radius
-  r: number = 30,  // Small radius
-  segments: number = 32, // Number of segments
-  rotation: number = 0  // Rotation in radians
-): { x: number; y: number; z: number }[] {
-  const points: { x: number; y: number; z: number }[] = [];
+export interface MerkabaField {
+  frequency: number;
+  tetrahedron_size: number;
+  rotation_speed: number;
+  quantum_signature: string;
+  intention_hash: string;
+  field_strength: number;
+  color_spectrum: string[];
+  resonance_points: {x: number, y: number, z: number}[];
+}
 
-  for (let i = 0; i < segments; i++) {
-    const theta = (i / segments) * Math.PI * 2;
-    for (let j = 0; j < segments; j++) {
-      const phi = (j / segments) * Math.PI * 2;
-      
-      const x = (R + r * Math.cos(theta)) * Math.cos(phi + rotation);
-      const y = (R + r * Math.cos(theta)) * Math.sin(phi + rotation);
-      const z = r * Math.sin(theta);
-      
-      points.push({ x, y, z });
-    }
+export interface MetatronField {
+  boost: boolean;
+  node_count: number;
+  connection_strength: number;
+  quantum_signature: string;
+  intention_hash: string;
+  field_strength: number;
+  color_spectrum: string[];
+  platonic_solids: string[];
+}
+
+export interface SriYantraField {
+  triangle_count: number;
+  precision_level: number;
+  quantum_signature: string;
+  intention_hash: string;
+  field_strength: number;
+  color_spectrum: string[];
+  bindu_intensity: number;
+}
+
+export interface FlowerOfLifeField {
+  circle_count: number;
+  duration: number;
+  quantum_signature: string;
+  intention_hash: string;
+  field_strength: number;
+  color_spectrum: string[];
+  life_force_intensity: number;
+}
+
+export interface PlatonicSolidField {
+  solid_type: "tetrahedron" | "hexahedron" | "octahedron" | "dodecahedron" | "icosahedron";
+  element: "fire" | "earth" | "air" | "ether" | "water";
+  quantum_signature: string;
+  intention_hash: string;
+  field_strength: number;
+  color_spectrum: string[];
+  vertices: {x: number, y: number, z: number}[];
+}
+
+export type SacredGeometryField = 
+  | { type: "torus", data: TorusField }
+  | { type: "merkaba", data: MerkabaField }
+  | { type: "metatron", data: MetatronField }
+  | { type: "sri_yantra", data: SriYantraField }
+  | { type: "flower_of_life", data: FlowerOfLifeField }
+  | { type: "platonic_solid", data: PlatonicSolidField };
+
+// Utility functions
+export function hashIntention(intention: string): string {
+  // Simple hash function for demonstration
+  let hash = 0;
+  for (let i = 0; i < intention.length; i++) {
+    const char = intention.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // Convert to 32bit integer
   }
-
-  return points;
+  return hash.toString(16).padStart(8, '0');
 }
 
-// Generate Merkaba (Star Tetrahedron) vertices
-export function generateMerkabaVertices(size: number = 100): {
-  upTetrahedron: { x: number; y: number; z: number }[];
-  downTetrahedron: { x: number; y: number; z: number }[];
-} {
-  // Tetrahedron pointing up (masculine energy)
-  const upTetrahedron = [
-    { x: 0, y: 0, z: size },              // Top
-    { x: -size, y: -size, z: -size/3 },   // Bottom left
-    { x: size, y: -size, z: -size/3 },    // Bottom right
-    { x: 0, y: size, z: -size/3 }         // Bottom back
-  ];
-  
-  // Tetrahedron pointing down (feminine energy)
-  const downTetrahedron = [
-    { x: 0, y: 0, z: -size },             // Bottom
-    { x: -size, y: -size, z: size/3 },    // Top left
-    { x: size, y: -size, z: size/3 },     // Top right
-    { x: 0, y: size, z: size/3 }          // Top back
-  ];
-  
-  return { upTetrahedron, downTetrahedron };
+export function generateQuantumSignature(): string {
+  // Generate a random quantum signature
+  const bytes = new Uint8Array(16);
+  window.crypto.getRandomValues(bytes);
+  return Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
-// Generate Flower of Life pattern
-export function generateFlowerOfLifePoints(
-  centerX: number = 0,
-  centerY: number = 0,
-  radius: number = 30,
-  layers: number = 3
-): { x: number; y: number }[] {
-  const points: { x: number; y: number }[] = [];
-  const centers: { x: number; y: number }[] = [{ x: centerX, y: centerY }];
+// Sacred geometry field generators
+export function generateTorusField(intention: string, frequency: number = SCHUMANN_RESONANCE): TorusField {
+  const fieldStrength = 0.5 + Math.random() * 0.5; // 0.5 to 1.0
   
-  // Add the center point
-  points.push({ x: centerX, y: centerY });
+  return {
+    frequency,
+    radius: 3 + Math.random() * 2,
+    inner_radius: 1 + Math.random(),
+    rotation_speed: 0.01 + Math.random() * 0.02,
+    quantum_signature: generateQuantumSignature(),
+    intention_hash: hashIntention(intention),
+    field_strength: fieldStrength,
+    color_spectrum: [
+      `hsl(${Math.floor(Math.random() * 360)}, 80%, 50%)`,
+      `hsl(${Math.floor(Math.random() * 360)}, 80%, 50%)`,
+      `hsl(${Math.floor(Math.random() * 360)}, 80%, 50%)`
+    ],
+    resonance_points: Array(7).fill(0).map(() => ({
+      x: (Math.random() * 2 - 1) * 10,
+      y: (Math.random() * 2 - 1) * 10,
+      z: (Math.random() * 2 - 1) * 10
+    }))
+  };
+}
+
+export function generateMerkabaField(intention: string, frequency: number = SCHUMANN_RESONANCE): MerkabaField {
+  const fieldStrength = 0.6 + Math.random() * 0.4; // 0.6 to 1.0 (stronger)
   
-  // Generate each layer
-  for (let layer = 1; layer <= layers; layer++) {
-    const newCenters: { x: number; y: number }[] = [];
-    
-    // For each existing center, create 6 circles around it
-    for (const center of centers) {
-      for (let i = 0; i < 6; i++) {
-        const angle = (i / 6) * Math.PI * 2;
-        const x = center.x + Math.cos(angle) * (radius * 2);
-        const y = center.y + Math.sin(angle) * (radius * 2);
-        
-        // Check if this center already exists
-        const exists = newCenters.some(c => 
-          Math.abs(c.x - x) < 0.001 && Math.abs(c.y - y) < 0.001
-        );
-        
-        if (!exists) {
-          newCenters.push({ x, y });
-          points.push({ x, y });
-        }
-      }
+  return {
+    frequency,
+    tetrahedron_size: 2 + Math.random() * 3,
+    rotation_speed: 0.015 + Math.random() * 0.025,
+    quantum_signature: generateQuantumSignature(),
+    intention_hash: hashIntention(intention),
+    field_strength: fieldStrength,
+    color_spectrum: [
+      `hsl(${180 + Math.floor(Math.random() * 60)}, 80%, 60%)`, // Cyan/Blue
+      `hsl(${270 + Math.floor(Math.random() * 60)}, 80%, 60%)`, // Purple
+      `hsl(${0 + Math.floor(Math.random() * 30)}, 80%, 60%)` // Red
+    ],
+    resonance_points: Array(12).fill(0).map(() => ({
+      x: (Math.random() * 2 - 1) * 10,
+      y: (Math.random() * 2 - 1) * 10,
+      z: (Math.random() * 2 - 1) * 10
+    }))
+  };
+}
+
+export function generateMetatronField(intention: string, boost: boolean = false): MetatronField {
+  const fieldStrength = boost ? 0.8 + Math.random() * 0.2 : 0.5 + Math.random() * 0.3;
+  const nodeCount = boost ? 13 : 7;
+  
+  return {
+    boost,
+    node_count: nodeCount,
+    connection_strength: 0.7 + Math.random() * 0.3,
+    quantum_signature: generateQuantumSignature(),
+    intention_hash: hashIntention(intention),
+    field_strength: fieldStrength,
+    color_spectrum: [
+      `hsl(${290 + Math.floor(Math.random() * 30)}, 80%, 60%)`, // Purple
+      `hsl(${40 + Math.floor(Math.random() * 20)}, 80%, 60%)`, // Gold
+      `hsl(${120 + Math.floor(Math.random() * 30)}, 80%, 60%)` // Green
+    ],
+    platonic_solids: [
+      "tetrahedron",
+      "hexahedron",
+      "octahedron",
+      "dodecahedron",
+      "icosahedron"
+    ]
+  };
+}
+
+export function generateSriYantraField(intention: string): SriYantraField {
+  const fieldStrength = 0.7 + Math.random() * 0.3; // 0.7 to 1.0 (stronger)
+  
+  return {
+    triangle_count: 9,
+    precision_level: 0.85 + Math.random() * 0.15,
+    quantum_signature: generateQuantumSignature(),
+    intention_hash: hashIntention(intention),
+    field_strength: fieldStrength,
+    color_spectrum: [
+      `hsl(${350 + Math.floor(Math.random() * 20)}, 80%, 60%)`, // Red
+      `hsl(${290 + Math.floor(Math.random() * 30)}, 80%, 60%)`, // Purple
+      `hsl(${30 + Math.floor(Math.random() * 20)}, 80%, 60%)` // Orange
+    ],
+    bindu_intensity: 0.9 + Math.random() * 0.1
+  };
+}
+
+export function generateFlowerOfLifeField(intention: string, duration: number = 60): FlowerOfLifeField {
+  const fieldStrength = 0.65 + Math.random() * 0.35; // 0.65 to 1.0
+  
+  return {
+    circle_count: 19,
+    duration,
+    quantum_signature: generateQuantumSignature(),
+    intention_hash: hashIntention(intention),
+    field_strength: fieldStrength,
+    color_spectrum: [
+      `hsl(${200 + Math.floor(Math.random() * 40)}, 80%, 60%)`, // Blue
+      `hsl(${120 + Math.floor(Math.random() * 30)}, 80%, 60%)`, // Green
+      `hsl(${40 + Math.floor(Math.random() * 20)}, 80%, 60%)` // Gold
+    ],
+    life_force_intensity: 0.8 + Math.random() * 0.2
+  };
+}
+
+export function generatePlatonicSolidField(
+  intention: string, 
+  solidType: "tetrahedron" | "hexahedron" | "octahedron" | "dodecahedron" | "icosahedron" = "dodecahedron"
+): PlatonicSolidField {
+  const elementMap = {
+    tetrahedron: "fire",
+    hexahedron: "earth",
+    octahedron: "air",
+    dodecahedron: "ether",
+    icosahedron: "water"
+  } as const;
+  
+  const fieldStrength = 0.6 + Math.random() * 0.4;
+
+  // Simplified vertices for each platonic solid
+  const getVertices = () => {
+    switch(solidType) {
+      case "tetrahedron":
+        return [
+          {x: 1, y: 1, z: 1}, {x: -1, y: -1, z: 1},
+          {x: -1, y: 1, z: -1}, {x: 1, y: -1, z: -1}
+        ];
+      case "hexahedron": // cube
+        return [
+          {x: 1, y: 1, z: 1}, {x: -1, y: 1, z: 1},
+          {x: -1, y: -1, z: 1}, {x: 1, y: -1, z: 1},
+          {x: 1, y: 1, z: -1}, {x: -1, y: 1, z: -1},
+          {x: -1, y: -1, z: -1}, {x: 1, y: -1, z: -1}
+        ];
+      case "octahedron":
+        return [
+          {x: 1, y: 0, z: 0}, {x: -1, y: 0, z: 0},
+          {x: 0, y: 1, z: 0}, {x: 0, y: -1, z: 0},
+          {x: 0, y: 0, z: 1}, {x: 0, y: 0, z: -1}
+        ];
+      case "dodecahedron":
+        const phi = PHI;
+        return [
+          {x: 1, y: 1, z: 1}, {x: 1, y: 1, z: -1}, 
+          {x: 1, y: -1, z: 1}, {x: 1, y: -1, z: -1},
+          {x: -1, y: 1, z: 1}, {x: -1, y: 1, z: -1},
+          {x: -1, y: -1, z: 1}, {x: -1, y: -1, z: -1},
+          {x: 0, y: phi, z: 1/phi}, {x: 0, y: phi, z: -1/phi},
+          {x: 0, y: -phi, z: 1/phi}, {x: 0, y: -phi, z: -1/phi},
+          {x: 1/phi, y: 0, z: phi}, {x: -1/phi, y: 0, z: phi},
+          {x: 1/phi, y: 0, z: -phi}, {x: -1/phi, y: 0, z: -phi},
+          {x: phi, y: 1/phi, z: 0}, {x: phi, y: -1/phi, z: 0},
+          {x: -phi, y: 1/phi, z: 0}, {x: -phi, y: -1/phi, z: 0}
+        ];
+      case "icosahedron":
+        return Array(12).fill(0).map((_, i) => {
+          const angle = (i / 12) * Math.PI * 2;
+          const nextAngle = ((i + 1) / 12) * Math.PI * 2;
+          return {
+            x: Math.cos(angle),
+            y: Math.sin(angle),
+            z: i % 2 === 0 ? 0.5 : -0.5
+          };
+        });
     }
-    
-    centers.push(...newCenters);
-  }
+  };
   
-  return points;
+  return {
+    solid_type: solidType,
+    element: elementMap[solidType],
+    quantum_signature: generateQuantumSignature(),
+    intention_hash: hashIntention(intention),
+    field_strength: fieldStrength,
+    color_spectrum: [
+      `hsl(${Math.floor(Math.random() * 360)}, 80%, 60%)`,
+      `hsl(${Math.floor(Math.random() * 360)}, 80%, 60%)`,
+      `hsl(${Math.floor(Math.random() * 360)}, 80%, 60%)`
+    ],
+    vertices: getVertices()
+  };
 }
 
-// Generate Sri Yantra geometry
-export function generateSriYantraGeometry(size: number = 100): {
-  triangles: { points: { x: number; y: number }[] }[];
-  bindu: { x: number; y: number };
-} {
-  const bindu = { x: 0, y: 0 }; // Central point
-  const triangles = [];
+// Divine proportion amplification
+export function divineProportionAmplify(intention: string, multiplier: number = 1.0) {
+  const baseStrength = 0.5 + Math.random() * 0.3;
+  const amplifiedStrength = baseStrength * PHI * multiplier;
   
-  // Generate the 9 interlocking triangles
-  for (let i = 0; i < 9; i++) {
-    const isShiva = i % 2 === 0; // Shiva (downward) triangles are even-indexed
-    const scale = 0.5 + (i * 0.05);
-    
-    if (isShiva) {
-      // Downward-pointing triangle (Shiva)
-      triangles.push({
-        points: [
-          { x: 0, y: -size * scale },
-          { x: size * scale, y: size * scale * 0.8 },
-          { x: -size * scale, y: size * scale * 0.8 }
-        ]
-      });
-    } else {
-      // Upward-pointing triangle (Shakti)
-      triangles.push({
-        points: [
-          { x: 0, y: size * scale },
-          { x: size * scale, y: -size * scale * 0.8 },
-          { x: -size * scale, y: -size * scale * 0.8 }
-        ]
-      });
-    }
-  }
-  
-  return { triangles, bindu };
+  return {
+    original_intention: intention,
+    amplified_intention: `I am in divine harmony with ${intention}`,
+    original_strength: baseStrength,
+    amplified_strength: Math.min(amplifiedStrength, 1.0),
+    phi_factor: PHI,
+    multiplier: multiplier,
+    divine_signature: generateQuantumSignature()
+  };
 }
 
-// Generate Metatron's Cube
-export function generateMetatronsCube(size: number = 100): {
-  spheres: { x: number; y: number }[];
-  connections: { from: number; to: number }[];
-} {
-  // 13 spheres positions
-  const spheres = [
-    { x: 0, y: 0 }, // Center
-    
-    // First ring of 6
-    { x: size, y: 0 },
-    { x: size * 0.5, y: size * 0.866 },
-    { x: -size * 0.5, y: size * 0.866 },
-    { x: -size, y: 0 },
-    { x: -size * 0.5, y: -size * 0.866 },
-    { x: size * 0.5, y: -size * 0.866 },
-    
-    // Second ring of 6
-    { x: size * 2, y: 0 },
-    { x: size, y: size * 1.732 },
-    { x: -size, y: size * 1.732 },
-    { x: -size * 2, y: 0 },
-    { x: -size, y: -size * 1.732 },
-    { x: size, y: -size * 1.732 }
-  ];
-  
-  // Connections between spheres (showing the first 30 connections for clarity)
-  const connections = [
-    // Connect center to first ring
-    { from: 0, to: 1 },
-    { from: 0, to: 2 },
-    { from: 0, to: 3 },
-    { from: 0, to: 4 },
-    { from: 0, to: 5 },
-    { from: 0, to: 6 },
-    
-    // Connect first ring
-    { from: 1, to: 2 },
-    { from: 2, to: 3 },
-    { from: 3, to: 4 },
-    { from: 4, to: 5 },
-    { from: 5, to: 6 },
-    { from: 6, to: 1 },
-    
-    // Connect first ring to second ring
-    { from: 1, to: 7 },
-    { from: 2, to: 8 },
-    { from: 3, to: 9 },
-    { from: 4, to: 10 },
-    { from: 5, to: 11 },
-    { from: 6, to: 12 },
-    
-    // Connect second ring (partial)
-    { from: 7, to: 8 },
-    { from: 8, to: 9 },
-    { from: 9, to: 10 },
-    { from: 10, to: 11 },
-    { from: 11, to: 12 },
-    { from: 12, to: 7 },
-    
-    // Some cross-connections for the platonic solids
-    { from: 1, to: 3 },
-    { from: 3, to: 5 },
-    { from: 5, to: 1 },
-    { from: 2, to: 4 },
-    { from: 4, to: 6 },
-    { from: 6, to: 2 }
-  ];
-  
-  return { spheres, connections };
+// Generate based on field type
+export function generateSacredGeometryField(
+  intention: string, 
+  fieldType: FieldType,
+  options: { 
+    frequency?: number; 
+    boost?: boolean; 
+    duration?: number;
+    solidType?: "tetrahedron" | "hexahedron" | "octahedron" | "dodecahedron" | "icosahedron";
+  } = {}
+): SacredGeometryField {
+  switch (fieldType) {
+    case "torus":
+      return { 
+        type: "torus", 
+        data: generateTorusField(intention, options.frequency || SCHUMANN_RESONANCE) 
+      };
+    case "merkaba":
+      return { 
+        type: "merkaba", 
+        data: generateMerkabaField(intention, options.frequency || SCHUMANN_RESONANCE) 
+      };
+    case "metatron":
+      return { 
+        type: "metatron", 
+        data: generateMetatronField(intention, options.boost || false) 
+      };
+    case "sri_yantra":
+      return { 
+        type: "sri_yantra", 
+        data: generateSriYantraField(intention) 
+      };
+    case "flower_of_life":
+      return { 
+        type: "flower_of_life", 
+        data: generateFlowerOfLifeField(intention, options.duration || 60) 
+      };
+    case "platonic_solid":
+      return { 
+        type: "platonic_solid", 
+        data: generatePlatonicSolidField(intention, options.solidType || "dodecahedron") 
+      };
+    default:
+      return { 
+        type: "torus", 
+        data: generateTorusField(intention) 
+      };
+  }
 }
