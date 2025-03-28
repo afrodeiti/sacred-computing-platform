@@ -331,10 +331,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const searchResults = await semanticHealingCodeSearch(issue, allCodes, limit);
       
       // Add a field indicating if this is Divine or Grabovoi code
-      const resultsWithLabels = searchResults.map(result => ({
-        ...result,
-        typeLabel: result.codeType === 'divine' ? 'Divine Healing Code' : 'Grabovoi Code'
-      }));
+      const resultsWithLabels = Array.isArray(searchResults) 
+        ? searchResults.map((result: any) => ({
+            ...result,
+            typeLabel: result.codeType === 'divine' ? 'Divine Healing Code' : 'Grabovoi Code'
+          }))
+        : searchResults;
       
       res.json(resultsWithLabels);
     } catch (error) {
