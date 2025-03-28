@@ -4,7 +4,11 @@ services:
     name: sacred-computing-platform
     env: node
     plan: free
-    buildCommand: ./build.sh
+    buildCommand: |
+      mkdir -p dist/public/assets
+      cp -r attached_assets/*.png dist/public/assets/
+      chmod +x build.sh
+      ./build.sh
     startCommand: NODE_ENV=production node dist/production.js
     envVars:
       - key: PORT

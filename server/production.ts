@@ -28,6 +28,11 @@ app.use((req, res, next) => {
   next();
 });
 
+// Health check endpoint for Render deployment
+app.get('/health', (_req: Request, res: Response) => {
+  res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
 // Error handling middleware
 app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
   const status = err.status || err.statusCode || 500;

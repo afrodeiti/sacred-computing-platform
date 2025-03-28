@@ -9,7 +9,9 @@ npm ci
 # Create a minimal static client without vite
 echo "Creating static client..."
 mkdir -p dist/public
+mkdir -p dist/public/assets
 cp -r client/public/* dist/public/ 2>/dev/null || :
+cp -r attached_assets/*.png dist/public/assets/ 2>/dev/null || :
 
 # Create a minimal index.html
 cat > dist/public/index.html << 'EOF'
