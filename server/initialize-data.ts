@@ -10,8 +10,9 @@ const __dirname = dirname(__filename);
 
 async function initializeDatabase() {
   if (!process.env.DATABASE_URL) {
-    console.error("DATABASE_URL environment variable not set");
-    process.exit(1);
+    console.log("DATABASE_URL environment variable not set. Skipping database initialization.");
+    // Don't exit with error during build, just gracefully exit
+    return;
   }
 
   console.log("Initializing database with healing codes and chakra data...");
