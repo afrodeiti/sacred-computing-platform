@@ -141,3 +141,72 @@ export async function sriYantraEncoder(intention: string) {
     bindu_intensity: 0.9 + Math.random() * 0.1
   };
 }
+
+// Generate Crop Circle Pattern
+export async function cropCircleGenerator(intention: string, complexity = 3, rotation = 0) {
+  const intentionHash = createHash('sha256').update(intention).digest('hex').substring(0, 8);
+  const fieldStrength = 0.6 + Math.random() * 0.4;
+  
+  const seedValue = parseInt(intentionHash.substring(0, 4), 16) / 0xFFFF;
+  const patternType = Math.floor(seedValue * 5); // 5 different pattern types
+  
+  return {
+    complexity,
+    rotation,
+    pattern_type: patternType,
+    circles: Math.max(3, Math.min(12, complexity * 2)),
+    lines: Math.max(6, Math.min(24, complexity * 4)),
+    arcs: Math.max(0, Math.min(8, complexity)),
+    quantum_signature: randomBytes(16).toString('hex'),
+    intention_hash: intentionHash,
+    field_strength: fieldStrength,
+    color_spectrum: [
+      `hsl(${120 + Math.floor(Math.random() * 60)}, 80%, 60%)`,
+      `hsl(${200 + Math.floor(Math.random() * 40)}, 80%, 60%)`,
+      `hsl(${60 + Math.floor(Math.random() * 30)}, 80%, 60%)`
+    ],
+    physical_manifestation: {
+      medium: "crop",
+      diameter: Math.floor(20 + seedValue * 80), // 20-100 meters
+      formation_time: Math.floor(0.5 + seedValue * 3.5), // 0.5-4 hours
+      durability: 0.7 + seedValue * 0.3, // 0.7-1.0
+      energetic_residue: 0.8 + seedValue * 0.2 // 0.8-1.0
+    }
+  };
+}
+
+// Generate Intention Form Pattern
+export async function intentionFormGenerator(intention: string, frequency = 174) {
+  const intentionHash = createHash('sha256').update(intention).digest('hex').substring(0, 8);
+  const fieldStrength = 0.65 + Math.random() * 0.35;
+  
+  const seedValue = parseInt(intentionHash.substring(0, 4), 16) / 0xFFFF;
+  const patternComplexity = Math.max(3, Math.min(10, Math.floor(intention.length / 5)));
+  const patternType = Math.floor(seedValue * 4); // 4 different cymatic pattern types
+  
+  return {
+    intention,
+    frequency,
+    pattern_type: ["waveform", "mandala", "spiral", "star"][patternType],
+    pattern_complexity: patternComplexity,
+    harmonic_resonance: frequency / 100,
+    pattern_stability: 0.5 + seedValue * 0.45,
+    manifestation_potential: 0.6 + seedValue * 0.38,
+    quantum_signature: randomBytes(16).toString('hex'),
+    intention_hash: intentionHash,
+    field_strength: fieldStrength,
+    color_spectrum: [
+      `hsl(${180 + Math.floor(Math.random() * 60)}, 80%, 60%)`,
+      `hsl(${300 + Math.floor(Math.random() * 60)}, 80%, 60%)`,
+      `hsl(${100 + Math.floor(Math.random() * 40)}, 80%, 60%)`
+    ],
+    physical_formation: {
+      type: "cymatic",
+      medium: "physical_matter",
+      pattern: ["simple_waves", "complex_interference", "nodal_points", "symmetrical_form"][patternType],
+      duration: Math.floor(30 + seedValue * 60), // 30-90 seconds
+      radius: Math.floor(20 + seedValue * 50), // 20-70 units
+      density: 0.5 + seedValue * 0.5 // 0.5-1.0
+    }
+  };
+}

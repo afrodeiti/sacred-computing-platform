@@ -8,7 +8,9 @@ import {
   flowerOfLifePattern, 
   metatronsCubeAmplifier,
   torusFieldGenerator,
-  sriYantraEncoder
+  sriYantraEncoder,
+  cropCircleGenerator,
+  intentionFormGenerator
 } from "./sacred-geometry";
 import { 
   embedIntentionInNetworkPacket, 
@@ -38,6 +40,7 @@ type WSMessageType =
   | "ENERGETIC_SIGNATURE"
   | "ENERGETIC_PATTERN"
   | "CROP_CIRCLE"
+  | "INTENTION_FORM"
   | "SYSTEM";
 
 interface WSMessage {
@@ -246,23 +249,61 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
         
         else if (parsedMessage.type === "CROP_CIRCLE") {
-          const { formationId } = parsedMessage.data;
+          const { intention, complexity, rotation, formationId } = parsedMessage.data;
           
-          if (!formationId) {
-            throw new Error("Formation ID is required");
+          if (formationId) {
+            // Get the existing crop circle formation from storage
+            const formation = await storage.getCropCircleFormationById(formationId);
+            
+            if (!formation) {
+              throw new Error(`Crop circle formation with ID ${formationId} not found`);
+            }
+            
+            // Broadcast the formation data to all clients for visualization
+            broadcastMessage({
+              type: "CROP_CIRCLE",
+              data: formation,
+              timestamp: new Date().toISOString()
+            });
+          } else if (intention) {
+            // Generate a new crop circle pattern based on the intention
+            const cropCircleData = await cropCircleGenerator(
+              intention, 
+              complexity || Math.floor(intention.length / 10) + 3,
+              rotation || 0
+            );
+            
+            // Broadcast the crop circle data to all clients
+            broadcastMessage({
+              type: "CROP_CIRCLE",
+              data: {
+                ...cropCircleData,
+                message: `Intention "${intention}" manifested as a crop circle pattern`,
+              },
+              timestamp: new Date().toISOString()
+            });
+          } else {
+            throw new Error("Either intention or formationId is required");
+          }
+        }
+        
+        else if (parsedMessage.type === "INTENTION_FORM") {
+          const { intention, frequency } = parsedMessage.data;
+          
+          if (!intention) {
+            throw new Error("Intention is required");
           }
           
-          // Get the crop circle formation from storage
-          const formation = await storage.getCropCircleFormationById(formationId);
+          // Generate cymatic pattern representation using the generator
+          const intentionFormData = await intentionFormGenerator(intention, frequency || 174);
           
-          if (!formation) {
-            throw new Error(`Crop circle formation with ID ${formationId} not found`);
-          }
+          // Add a message field for display
+          intentionFormData.message = `Intention "${intention}" transformed into physical cymatic pattern`;
           
-          // Broadcast the formation data to all clients for visualization
+          // Broadcast the intention form data to all clients
           broadcastMessage({
-            type: "CROP_CIRCLE",
-            data: formation,
+            type: "INTENTION_FORM",
+            data: intentionFormData,
             timestamp: new Date().toISOString()
           });
         }

@@ -4,7 +4,9 @@ import {
   SriYantra, 
   Merkaba, 
   MetatronsCube, 
-  TorusField 
+  TorusField,
+  CropCircle,
+  IntentionForm
 } from "@/components/sacred-geometry";
 import { useSacred } from "@/context/sacred-context";
 import { useToast } from "@/hooks/use-toast";
@@ -104,7 +106,9 @@ export default function SacredGeometryInteractivePage() {
           if (data.type === activePattern.toUpperCase() || 
               (activePattern === "torus" && data.type === "TORUS_FIELD") ||
               (activePattern === "platonic_solid" && data.type === "PLATONIC_SOLID") ||
-              (activePattern === "metatron" && data.type === "METATRON")) {
+              (activePattern === "metatron" && data.type === "METATRON") ||
+              (activePattern === "crop_circle" && data.type === "CROP_CIRCLE") ||
+              (activePattern === "intention_form" && data.type === "INTENTION_FORM")) {
             setResponse(data.data);
             setIsProcessing(false);
             
@@ -148,6 +152,18 @@ export default function SacredGeometryInteractivePage() {
                 toast({
                   title: "Elemental Balance",
                   description: "Your intention is now aligned with the elemental forces of creation.",
+                });
+                break;
+              case "crop_circle":
+                toast({
+                  title: "Physical Manifestation",
+                  description: "Your intention has been translated into a physical crop circle pattern.",
+                });
+                break;
+              case "intention_form":
+                toast({
+                  title: "Cymatic Formation",
+                  description: "Your intention has been converted into a physical pattern through cymatics.",
                 });
                 break;
             }
@@ -281,6 +297,10 @@ export default function SacredGeometryInteractivePage() {
         return <TorusField {...props} frequency={frequency} />;
       case "platonic_solid":
         return <MetatronsCube {...props} boost={true} />;
+      case "crop_circle":
+        return <CropCircle {...props} complexity={Math.floor(frequency / 100)} rotation={frequency} />;
+      case "intention_form":
+        return <IntentionForm {...props} frequency={frequency} intention={intention} />;
       default:
         return <TorusField {...props} />;
     }
@@ -304,6 +324,10 @@ export default function SacredGeometryInteractivePage() {
         return "The Torus Field is the fundamental pattern of creation and manifestation. It embeds your intention in the continuous flow of universal energy.";
       case "platonic_solid":
         return "Platonic Solids represent the building blocks of reality. They align your intention with elemental forces and cosmic structure.";
+      case "crop_circle":
+        return "Crop Circles are energetic imprints that manifest as physical patterns. They translate your intention into geometric formations that influence the physical world.";
+      case "intention_form":
+        return "The Intention Form converts your thoughts into physical patterns, similar to how sound creates cymatics. It manifests your intention into the material realm.";
       default:
         return patternInfo.description;
     }
@@ -324,6 +348,10 @@ export default function SacredGeometryInteractivePage() {
         return SCHUMANN_RESONANCE; // 7.83 Hz - Earth's resonance
       case "platonic_solid":
         return SOLFEGGIO.RE; // 417 Hz - Undoing situations and facilitating change
+      case "crop_circle":
+        return 432; // 432 Hz - Universal harmony
+      case "intention_form":
+        return 174; // 174 Hz - Foundation frequency for physical manifestation
       default:
         return SCHUMANN_RESONANCE;
     }
