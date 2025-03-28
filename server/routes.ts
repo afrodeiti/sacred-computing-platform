@@ -15,8 +15,10 @@ import {
 import { 
   embedIntentionInNetworkPacket, 
   PacketType,
-  encodeIntentionPacket 
+  encodeIntentionPacket,
+  createIntentionPacket
 } from "./network-packet";
+import { SCHUMANN_RESONANCE } from "./sacred-geometry";
 import { z } from "zod";
 import { 
   insertSoulArchiveSchema, 
@@ -429,7 +431,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Create the response with all data
-      const result = {
+      const result: any = {
         success: true,
         message: `Intention "${intention}" broadcast complete`,
         packet: {

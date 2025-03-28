@@ -8,7 +8,9 @@ import HealingSearch from "@/pages/healing-search";
 import IntentionRecommendation from "@/pages/intention-recommendation";
 import SacredGeometryPage from "@/pages/sacred-geometry";
 import SacredGeometryInteractivePage from "@/pages/sacred-geometry-interactive";
+import IntentionBroadcast from "@/pages/intention-broadcast";
 import { SacredProvider } from "./context/sacred-context";
+import { SocketProvider } from "./context/socket-context";
 import { ThemeProvider } from "./components/ui/theme-provider";
 
 function Router() {
@@ -19,6 +21,7 @@ function Router() {
       <Route path="/intention-recommendation" component={IntentionRecommendation} />
       <Route path="/sacred-geometry" component={SacredGeometryPage} />
       <Route path="/sacred-geometry-interactive" component={SacredGeometryInteractivePage} />
+      <Route path="/intention-broadcast" component={IntentionBroadcast} />
       <Route component={NotFound} />
     </Switch>
   );
@@ -29,8 +32,10 @@ function App() {
     <ThemeProvider defaultTheme="dark" storageKey="sacred-theme">
       <QueryClientProvider client={queryClient}>
         <SacredProvider>
-          <Router />
-          <Toaster />
+          <SocketProvider>
+            <Router />
+            <Toaster />
+          </SocketProvider>
         </SacredProvider>
       </QueryClientProvider>
     </ThemeProvider>
