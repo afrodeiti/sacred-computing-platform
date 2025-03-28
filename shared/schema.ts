@@ -119,3 +119,25 @@ export const insertCropCircleFormationSchema = createInsertSchema(cropCircleForm
 
 export type InsertCropCircleFormation = z.infer<typeof insertCropCircleFormationSchema>;
 export type CropCircleFormation = typeof cropCircleFormation.$inferSelect;
+
+// Spirit Communication model for storing communication portal records
+export const spiritCommunication = pgTable("spirit_communication", {
+  id: serial("id").primaryKey(),
+  intention: text("intention").notNull(), // User's question or intention
+  activationCodes: json("activation_codes").notNull(), // Array of healing codes used to activate the channel
+  portalType: text("portal_type").notNull(), // Type of communication portal (veil, higher_self, ancestral, etc.)
+  portalFrequency: real("portal_frequency"), // Primary frequency of the portal
+  response: text("response").notNull(), // The received communication
+  energeticSignature: json("energetic_signature"), // Energy signature detected during communication
+  portalGeometry: text("portal_geometry"), // Sacred geometry pattern that manifested
+  timestamp: timestamp("timestamp").defaultNow().notNull(),
+  userId: integer("user_id").references(() => users.id),
+});
+
+export const insertSpiritCommunicationSchema = createInsertSchema(spiritCommunication).omit({
+  id: true,
+  timestamp: true,
+});
+
+export type InsertSpiritCommunication = z.infer<typeof insertSpiritCommunicationSchema>;
+export type SpiritCommunication = typeof spiritCommunication.$inferSelect;

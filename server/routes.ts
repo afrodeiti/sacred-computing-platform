@@ -24,7 +24,9 @@ import {
   insertSoulArchiveSchema, 
   insertEnergeticSignatureSchema, 
   insertEnergeticPatternSchema,
-  insertCropCircleFormationSchema
+  insertCropCircleFormationSchema,
+  insertSpiritCommunicationSchema,
+  HealingCode
 } from "@shared/schema";
 
 // Connected WebSocket clients
@@ -78,6 +80,300 @@ async function broadcastMessage(message: WSMessage) {
       client.send(messageStr);
     }
   });
+}
+
+// Spirit communication response generation
+async function generateSpiritResponse(
+  intention: string, 
+  activationCodes: HealingCode[], 
+  portalType: string
+): Promise<{ 
+  message: string, 
+  energeticSignature: any, 
+  portalGeometry: any 
+}> {
+  // Check for OpenAI API key
+  if (process.env.OPENAI_API_KEY) {
+    try {
+      // Use OpenAI to generate the response
+      const { generateSpiritCommunication } = await import("./openai");
+      return await generateSpiritCommunication(intention, activationCodes, portalType);
+    } catch (error) {
+      console.error("Error using OpenAI for spirit communication:", error);
+      // Fall back to deterministic approach if OpenAI fails
+    }
+  }
+  
+  // Deterministic approach - generate a consistent but "random-seeming" response
+  // using the intention and codes as a seed
+  
+  // Create a deterministic seed from the intention and activation codes
+  const seed = intention + (activationCodes.map(code => code.code).join('') || '');
+  const seedHash = createHash(seed);
+  
+  // Based on the portal type, generate different style responses
+  const messageTemplates = [
+    "The vibrations you seek are harmonizing with the{{frequency}}field. {{codeReference}} Your intention of '{{intention}}' is resonating through the {{portal}} portal.",
+    "Through the veil between worlds, we acknowledge your intention: '{{intention}}'. {{codeActivation}} The {{portal}} frequencies are aligning.",
+    "Your call through the {{portal}} has been received. We recognize the intention '{{intention}}' and {{codeImpact}}",
+    "The {{portal}} gateway opens to your intention '{{intention}}'. {{codeReference}} The frequencies are {{frequencyState}}.",
+    "We hear your intention '{{intention}}' across dimensions. The {{portal}} amplifies this. {{codeActivation}}"
+  ];
+  
+  // Select a template based on the hash
+  const templateIndex = Math.floor(seedHash % messageTemplates.length);
+  let messageTemplate = messageTemplates[templateIndex];
+  
+  // Replace placeholders with actual values
+  let message = messageTemplate
+    .replace('{{intention}}', intention)
+    .replace('{{portal}}', portalType);
+  
+  // Code references
+  const codeReferences = [
+    "The codes {{codes}} are activating inter-dimensional pathways.",
+    "Your activation sequence {{codes}} has opened a channel.",
+    "The numeric patterns {{codes}} vibrate with your intention.",
+    "The sacred codes {{codes}} create a harmonic resonance field.",
+    "Dimensional gateways respond to {{codes}}."
+  ];
+  
+  const codeRefIndex = Math.floor((seedHash / 10) % codeReferences.length);
+  const codeRef = activationCodes.length > 0 
+    ? codeReferences[codeRefIndex].replace('{{codes}}', activationCodes.map(c => c.code).join(', '))
+    : "Your intention stands alone, no codes to amplify its passage.";
+  
+  // Code activations
+  const codeActivations = [
+    "The codes are illuminating your intention with sacred geometry.",
+    "Divine patterns form as your activation codes open pathways.",
+    "The numerical frequencies of your codes create bridges between realms.",
+    "Your code sequence allows for clearer transmission.",
+    "The higher harmonics of your chosen codes enhance the connection."
+  ];
+  
+  const codeActivationIndex = Math.floor((seedHash / 100) % codeActivations.length);
+  const codeActivation = activationCodes.length > 0 
+    ? codeActivations[codeActivationIndex]
+    : "Though no codes amplify your message, we receive your pure intention.";
+  
+  // Code impacts
+  const codeImpacts = [
+    "your coded vibrations ripple through the quantum field.",
+    "the mathematical patterns you've chosen create resonance.",
+    "these numerical sequences open doorways between dimensions.",
+    "your chosen patterns align with cosmic frequencies.",
+    "the sacred geometry of your codes amplifies your intention."
+  ];
+  
+  const codeImpactIndex = Math.floor((seedHash / 1000) % codeImpacts.length);
+  const codeImpact = activationCodes.length > 0 
+    ? codeImpacts[codeImpactIndex]
+    : "we honor the raw energy of your unamplified intention.";
+  
+  // Frequency states
+  const frequencyStates = [
+    "aligning with cosmic patterns",
+    "creating harmonic resonance",
+    "opening inter-dimensional pathways",
+    "shifting into coherent alignment",
+    "transcending conventional boundaries"
+  ];
+  
+  const frequencyStateIndex = Math.floor((seedHash / 10000) % frequencyStates.length);
+  const frequencyState = frequencyStates[frequencyStateIndex];
+  
+  // Frequencies
+  const frequencies = [
+    " universal ",
+    " quantum ",
+    " celestial ",
+    " divine ",
+    " harmonic "
+  ];
+  
+  const frequencyIndex = Math.floor((seedHash / 100000) % frequencies.length);
+  const frequency = frequencies[frequencyIndex];
+  
+  // Replace additional placeholders
+  message = message
+    .replace('{{codeReference}}', codeRef)
+    .replace('{{codeActivation}}', codeActivation)
+    .replace('{{codeImpact}}', codeImpact)
+    .replace('{{frequencyState}}', frequencyState)
+    .replace('{{frequency}}', frequency);
+  
+  // Create an energetic signature for the response
+  const energeticSignature = createResponseSignature(intention, activationCodes, portalType, seedHash);
+  
+  // Create a portal geometry based on the portal type
+  const portalGeometry = createPortalGeometry(portalType, seedHash);
+  
+  return {
+    message,
+    energeticSignature,
+    portalGeometry
+  };
+}
+
+// Helper to create a deterministic hash from a string
+function createHash(input: string): number {
+  let hash = 0;
+  for (let i = 0; i < input.length; i++) {
+    const char = input.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // Convert to 32bit integer
+  }
+  return Math.abs(hash);
+}
+
+// Create an energetic signature for the response
+function createResponseSignature(
+  intention: string, 
+  codes: HealingCode[], 
+  portalType: string, 
+  seedHash: number
+): any {
+  // Use the seed hash to create a deterministic but seemingly random signature
+  const baseFrequency = 400 + (seedHash % 200); // Range from 400-600 Hz
+  
+  // Create harmonics based on the seed
+  const harmonics = [
+    baseFrequency * 2,
+    baseFrequency * 3,
+    baseFrequency * 5
+  ];
+  
+  // Different waveforms based on portal type
+  const waveforms = ["sine", "triangle", "square", "sawtooth"];
+  const waveformIndex = Math.floor((seedHash / 10000) % waveforms.length);
+  
+  // Create a mathematical formula based on the frequency
+  const formula = `f(t) = A * ${waveforms[waveformIndex]}(2π * ${baseFrequency} * t)`;
+  
+  // Determine geometry type based on portal
+  let geometryType = "torus";
+  if (portalType === "angelic") geometryType = "merkaba";
+  else if (portalType === "higher_self") geometryType = "flower_of_life";
+  else if (portalType === "ancestral") geometryType = "sri_yantra";
+  else if (portalType === "elemental") geometryType = "platonic_solid";
+  else if (portalType === "cosmic") geometryType = "metatron_cube";
+  
+  // Generate a color from the seed
+  const r = Math.floor((seedHash % 255));
+  const g = Math.floor(((seedHash / 1000) % 255));
+  const b = Math.floor(((seedHash / 1000000) % 255));
+  const colorSpectrum = `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+  
+  // Create a numerical sequence from the codes or from the seed if no codes
+  const numericalSequence = codes.length > 0 
+    ? codes.map(c => c.code).join('-') 
+    : `${seedHash % 1000}-${(seedHash / 1000) % 1000}-${(seedHash / 1000000) % 1000}`;
+  
+  // Return the complete signature
+  return {
+    name: `${portalType.charAt(0).toUpperCase() + portalType.slice(1)} Response to "${intention.substring(0, 20)}${intention.length > 20 ? '...' : ''}"`,
+    category: portalType,
+    description: `Energetic signature generated from spirit communication through ${portalType} portal`,
+    baseFrequency,
+    harmonics,
+    waveform: waveforms[waveformIndex],
+    mathematicalFormula: formula,
+    geometryType,
+    colorSpectrum,
+    numericalSequence,
+    visualPattern: {
+      type: geometryType,
+      radius: 1 + (seedHash % 5) / 10, // Range from 1.0 to 1.5
+      detail: 3 + (seedHash % 8)       // Range from 3 to 10
+    }
+  };
+}
+
+// Create a portal geometry visualization
+function createPortalGeometry(portalType: string, seedHash: number): any {
+  // Base pattern type on portal type
+  let patternType = "torus";
+  if (portalType === "angelic") patternType = "merkaba";
+  else if (portalType === "higher_self") patternType = "flower_of_life";
+  else if (portalType === "ancestral") patternType = "sri_yantra";
+  else if (portalType === "elemental") patternType = "platonic";
+  else if (portalType === "cosmic") patternType = "metatron";
+  
+  // Create base geometry that varies by portal type
+  const baseGeometry = {
+    type: patternType,
+    radius: 1 + (seedHash % 10) / 10,  // 1.0 to 2.0
+    rotation: (seedHash % 360),        // 0 to 359 degrees
+    segments: 12 + (seedHash % 24),    // 12 to 36
+    depth: 0.5 + (seedHash % 10) / 10, // 0.5 to 1.5
+    levels: 3 + (seedHash % 5)         // 3 to 8
+  };
+  
+  // Additional properties specific to each pattern type
+  if (patternType === "torus") {
+    return {
+      ...baseGeometry,
+      tubeRadius: 0.3 + (seedHash % 5) / 10,
+      tubularSegments: 64 + (seedHash % 64),
+      radialSegments: 32 + (seedHash % 16),
+      p: 2 + (seedHash % 3),
+      q: 3 + (seedHash % 4)
+    };
+  } else if (patternType === "merkaba") {
+    return {
+      ...baseGeometry,
+      starTetrahedronScale: 1 + (seedHash % 5) / 10,
+      rotation: {
+        x: (seedHash % 360),
+        y: ((seedHash / 1000) % 360),
+        z: ((seedHash / 1000000) % 360)
+      },
+      colors: {
+        upward: `hsl(${seedHash % 360}, 70%, 60%)`,
+        downward: `hsl(${(seedHash + 180) % 360}, 70%, 60%)`
+      }
+    };
+  } else if (patternType === "flower_of_life") {
+    return {
+      ...baseGeometry,
+      iterations: 3 + (seedHash % 4),
+      circleRadius: 0.1 + (seedHash % 10) / 100,
+      colors: Array.from({ length: 7 }, (_, i) => 
+        `hsl(${(seedHash + i * 51) % 360}, 70%, 60%)`
+      )
+    };
+  } else if (patternType === "sri_yantra") {
+    return {
+      ...baseGeometry,
+      trianglePairs: 4,
+      centerType: (seedHash % 3) === 0 ? "bindu" : ((seedHash % 3) === 1 ? "lotus" : "circle"),
+      colors: Array.from({ length: 9 }, (_, i) => 
+        `hsl(${(seedHash + i * 40) % 360}, 70%, 60%)`
+      )
+    };
+  } else if (patternType === "platonic") {
+    const solids = ["tetrahedron", "hexahedron", "octahedron", "dodecahedron", "icosahedron"];
+    return {
+      ...baseGeometry,
+      solid: solids[seedHash % solids.length],
+      edgeHighlight: (seedHash % 2) === 0,
+      color: `hsl(${seedHash % 360}, 70%, 60%)`,
+      edgeColor: `hsl(${(seedHash + 180) % 360}, 70%, 60%)`
+    };
+  } else if (patternType === "metatron") {
+    return {
+      ...baseGeometry,
+      showInnerCircles: (seedHash % 2) === 0,
+      showOuterCircles: (seedHash % 3) !== 0,
+      primaryColor: `hsl(${seedHash % 360}, 70%, 60%)`,
+      secondaryColor: `hsl(${(seedHash + 120) % 360}, 70%, 60%)`,
+      tertiaryColor: `hsl(${(seedHash + 240) % 360}, 70%, 60%)`
+    };
+  }
+  
+  // Default fallback
+  return baseGeometry;
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -396,6 +692,102 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Spirit Communication Routes
+  
+  // Get all spirit communications
+  app.get("/api/spirit-communications", async (req, res) => {
+    try {
+      const userId = req.query.userId ? parseInt(req.query.userId as string) : undefined;
+      
+      let communications;
+      if (userId && !isNaN(userId)) {
+        communications = await storage.getUserSpiritCommunications(userId);
+      } else {
+        communications = await storage.getSpiritCommunications();
+      }
+      
+      res.json(communications);
+    } catch (error) {
+      console.error("Error fetching spirit communications:", error);
+      res.status(500).json({ error: "Failed to fetch spirit communications" });
+    }
+  });
+  
+  // Get a single spirit communication by ID
+  app.get("/api/spirit-communications/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ error: "Invalid ID" });
+      }
+      
+      const communication = await storage.getSpiritCommunicationById(id);
+      if (!communication) {
+        return res.status(404).json({ error: "Spirit communication not found" });
+      }
+      
+      res.json(communication);
+    } catch (error) {
+      console.error("Error fetching spirit communication:", error);
+      res.status(500).json({ error: "Failed to fetch spirit communication" });
+    }
+  });
+  
+  // Create/receive a spirit communication
+  app.post("/api/spirit-communications", async (req, res) => {
+    try {
+      const validatedData = insertSpiritCommunicationSchema.parse(req.body);
+      
+      // Generate a spirit response using the communication portals
+      // This is where the "randomized" response is generated based on the intention and activation codes
+      const originalIntention = validatedData.intention;
+      
+      // Get activation codes details from storage
+      const activationCodesDetails: HealingCode[] = [];
+      if (Array.isArray(validatedData.activationCodes)) {
+        const codeIds = validatedData.activationCodes as number[];
+        const allCodes = await storage.getHealingCodes();
+        // Use a properly typed variable
+        const matchedCodes = allCodes.filter(code => codeIds.includes(code.id));
+        activationCodesDetails.push(...matchedCodes);
+      }
+      
+      // Generate a response based on the activated codes and intention
+      const portalResponse = await generateSpiritResponse(
+        originalIntention, 
+        activationCodesDetails, 
+        validatedData.portalType
+      );
+      
+      // Replace the temporary response with the generated one
+      validatedData.response = portalResponse.message;
+      
+      // Add the energy signature derived from the communication
+      validatedData.energeticSignature = portalResponse.energeticSignature;
+      
+      // Set the portal geometry based on the portal type
+      validatedData.portalGeometry = portalResponse.portalGeometry;
+      
+      // Create the spirit communication record
+      const communication = await storage.createSpiritCommunication(validatedData);
+      
+      // Broadcast the communication through WebSocket for real-time visualization
+      broadcastMessage({
+        type: "SYSTEM",
+        data: { 
+          message: `Spirit communication from beyond the veil received`,
+          portalType: communication.portalType
+        },
+        timestamp: new Date().toISOString()
+      });
+      
+      res.status(201).json(communication);
+    } catch (error) {
+      console.error("Error creating spirit communication:", error);
+      res.status(400).json({ error: "Failed to create spirit communication" });
+    }
+  });
+
   // Broadcast intention via network packet
   app.post("/api/broadcast-intention", async (req, res) => {
     try {
@@ -799,6 +1191,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(400).json({ error: "Failed to create crop circle formation" });
     }
   });
+
+  // API endpoints go here
 
   return httpServer;
 }

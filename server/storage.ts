@@ -4,7 +4,8 @@ import {
   healingCode, type HealingCode, type InsertHealingCode,
   energeticSignature, type EnergeticSignature, type InsertEnergeticSignature,
   energeticPattern, type EnergeticPattern, type InsertEnergeticPattern,
-  cropCircleFormation, type CropCircleFormation, type InsertCropCircleFormation
+  cropCircleFormation, type CropCircleFormation, type InsertCropCircleFormation,
+  spiritCommunication, type SpiritCommunication, type InsertSpiritCommunication
 } from "@shared/schema";
 
 export interface IStorage {
@@ -43,6 +44,12 @@ export interface IStorage {
   getCropCircleFormations(): Promise<CropCircleFormation[]>;
   getCropCircleFormationById(id: number): Promise<CropCircleFormation | undefined>;
   createCropCircleFormation(formation: InsertCropCircleFormation): Promise<CropCircleFormation>;
+  
+  // Spirit Communication methods
+  getSpiritCommunications(): Promise<SpiritCommunication[]>;
+  getSpiritCommunicationById(id: number): Promise<SpiritCommunication | undefined>;
+  getUserSpiritCommunications(userId: number): Promise<SpiritCommunication[]>;
+  createSpiritCommunication(communication: InsertSpiritCommunication): Promise<SpiritCommunication>;
 }
 
 export class MemStorage implements IStorage {
@@ -52,6 +59,7 @@ export class MemStorage implements IStorage {
   private energeticSignatures: Map<number, EnergeticSignature>;
   private energeticPatterns: Map<number, EnergeticPattern>;
   private cropCircleFormations: Map<number, CropCircleFormation>;
+  private spiritCommunications: Map<number, SpiritCommunication>;
   
   currentUserId: number;
   currentArchiveId: number;
@@ -59,6 +67,7 @@ export class MemStorage implements IStorage {
   currentSignatureId: number;
   currentPatternId: number;
   currentFormationId: number;
+  currentCommunicationId: number;
 
   constructor() {
     this.users = new Map();
@@ -67,6 +76,7 @@ export class MemStorage implements IStorage {
     this.energeticSignatures = new Map();
     this.energeticPatterns = new Map();
     this.cropCircleFormations = new Map();
+    this.spiritCommunications = new Map();
     
     this.currentUserId = 1;
     this.currentArchiveId = 1;
@@ -74,6 +84,7 @@ export class MemStorage implements IStorage {
     this.currentSignatureId = 1;
     this.currentPatternId = 1;
     this.currentFormationId = 1;
+    this.currentCommunicationId = 1;
     
     // Initialize with sample data
     this.initializeHealingCodes();
@@ -296,6 +307,47 @@ export class MemStorage implements IStorage {
     
     this.cropCircleFormations.set(id, cropCircleFormation);
     return cropCircleFormation;
+  }
+  
+  // Spirit Communication methods
+  async getSpiritCommunications(): Promise<SpiritCommunication[]> {
+    return Array.from(this.spiritCommunications.values()).sort((a, b) => 
+      new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+    );
+  }
+  
+  async getSpiritCommunicationById(id: number): Promise<SpiritCommunication | undefined> {
+    return this.spiritCommunications.get(id);
+  }
+  
+  async getUserSpiritCommunications(userId: number): Promise<SpiritCommunication[]> {
+    return Array.from(this.spiritCommunications.values())
+      .filter(comm => comm.userId === userId)
+      .sort((a, b) => 
+        new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+      );
+  }
+  
+  async createSpiritCommunication(communication: InsertSpiritCommunication): Promise<SpiritCommunication> {
+    const id = this.currentCommunicationId++;
+    const now = new Date();
+    
+    // Ensure all required properties have values, even if null
+    const spiritCommunication: SpiritCommunication = {
+      id,
+      intention: communication.intention,
+      activationCodes: communication.activationCodes,
+      portalType: communication.portalType,
+      portalFrequency: communication.portalFrequency ?? null,
+      response: communication.response,
+      energeticSignature: communication.energeticSignature ?? null,
+      portalGeometry: communication.portalGeometry ?? null,
+      timestamp: now,
+      userId: communication.userId ?? null
+    };
+    
+    this.spiritCommunications.set(id, spiritCommunication);
+    return spiritCommunication;
   }
 
   // Initialize with sample data
@@ -602,6 +654,27 @@ export class DrizzleStorage implements IStorage {
   
   async createCropCircleFormation(formation: InsertCropCircleFormation): Promise<CropCircleFormation> {
     const result = await this.db.insert(cropCircleFormation).values(formation).returning();
+    return result[0];
+  }
+  
+  // Spirit Communication methods
+  async getSpiritCommunications(): Promise<SpiritCommunication[]> {
+    return await this.db.select().from(spiritCommunication).orderBy(spiritCommunication.timestamp, 'desc');
+  }
+  
+  async getSpiritCommunicationById(id: number): Promise<SpiritCommunication | undefined> {
+    const result = await this.db.select().from(spiritCommunication).where({ id }).limit(1);
+    return result[0];
+  }
+  
+  async getUserSpiritCommunications(userId: number): Promise<SpiritCommunication[]> {
+    return await this.db.select().from(spiritCommunication)
+      .where({ userId })
+      .orderBy(spiritCommunication.timestamp, 'desc');
+  }
+  
+  async createSpiritCommunication(communication: InsertSpiritCommunication): Promise<SpiritCommunication> {
+    const result = await this.db.insert(spiritCommunication).values(communication).returning();
     return result[0];
   }
 }
