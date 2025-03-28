@@ -394,6 +394,94 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Broadcast intention via network packet
+  app.post("/api/broadcast-intention", async (req, res) => {
+    try {
+      const { intention, frequency = SCHUMANN_RESONANCE, fieldType = "torus", amplify = false, multiplier = 1.0 } = req.body;
+      
+      if (!intention) {
+        return res.status(400).json({ error: "Intention is required" });
+      }
+      
+      // Create the intention packet
+      const packet = await createIntentionPacket(intention, frequency, fieldType);
+      const packetBase64 = encodeIntentionPacket(packet);
+      
+      // Generate sacred geometry data based on field type
+      let geometryData: any = null;
+      
+      if (fieldType === "torus") {
+        geometryData = await torusFieldGenerator(intention, frequency);
+      } else if (fieldType === "merkaba") {
+        geometryData = await merkabaFieldGenerator(intention, frequency);
+      } else if (fieldType === "metatron") {
+        geometryData = await metatronsCubeAmplifier(intention, amplify);
+      } else if (fieldType === "sri_yantra") {
+        geometryData = await sriYantraEncoder(intention);
+      } else if (fieldType === "flower_of_life") {
+        geometryData = await flowerOfLifePattern(intention, 60); // 60 second duration
+      }
+      
+      // Apply divine amplification if requested
+      let amplifiedData: any = null;
+      if (amplify) {
+        amplifiedData = await divineProportionAmplify(intention, multiplier);
+      }
+      
+      // Create the response with all data
+      const result = {
+        success: true,
+        message: `Intention "${intention}" broadcast complete`,
+        packet: {
+          ...packet,
+          base64: packetBase64
+        },
+        geometryData,
+        fieldType,
+        frequency
+      };
+      
+      if (amplifiedData) {
+        result.amplifiedData = amplifiedData;
+      }
+      
+      // Broadcast to all connected WebSocket clients
+      broadcastMessage({
+        type: "NETWORK_PACKET",
+        data: {
+          message: `Intention "${intention}" broadcast via network packet`,
+          intention,
+          frequency,
+          fieldType,
+          timestamp: new Date().toISOString()
+        },
+        timestamp: new Date().toISOString(),
+        packetData: packetBase64
+      });
+      
+      // Broadcast the visualization data as well
+      if (geometryData) {
+        const wsType = fieldType === "torus" ? "TORUS_FIELD" : 
+                      fieldType === "merkaba" ? "MERKABA" :
+                      fieldType === "metatron" ? "METATRON" :
+                      fieldType === "sri_yantra" ? "SRI_YANTRA" :
+                      fieldType === "flower_of_life" ? "FLOWER_OF_LIFE" :
+                      "ENERGETIC_PATTERN";
+                      
+        broadcastMessage({
+          type: wsType as WSMessageType,
+          data: geometryData,
+          timestamp: new Date().toISOString()
+        });
+      }
+      
+      res.json(result);
+    } catch (error) {
+      console.error("Error broadcasting intention:", error);
+      res.status(500).json({ error: "Failed to broadcast intention" });
+    }
+  });
+  
   // Get all soul archives
   app.get("/api/soul-archives", async (req, res) => {
     try {
