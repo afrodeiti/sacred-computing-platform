@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, timestamp, json } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, json, real, varchar } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -52,3 +52,69 @@ export const insertHealingCodeSchema = createInsertSchema(healingCode).omit({
 
 export type InsertHealingCode = z.infer<typeof insertHealingCodeSchema>;
 export type HealingCode = typeof healingCode.$inferSelect;
+
+// Energetic Signature model for storing mathematical representations of energetic patterns
+export const energeticSignature = pgTable("energetic_signature", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  category: text("category").notNull(), // element, emotion, bodySystem, naturalPhenomenon, consciousness
+  description: text("description"),
+  baseFrequency: real("base_frequency"), // Hertz value of the primary frequency
+  harmonics: json("harmonics"), // Array of harmonic frequencies
+  waveform: text("waveform"), // sine, square, triangle, sawtooth
+  mathematicalFormula: text("mathematical_formula"), // Equation representing the pattern
+  geometryType: text("geometry_type"), // The type of sacred geometry associated
+  colorSpectrum: text("color_spectrum"), // Color association (hex values)
+  numericalSequence: varchar("numerical_sequence", { length: 100 }), // Numerical code like Grabovoi
+  visualPattern: json("visual_pattern"), // Mathematical definition for visualization
+  created_at: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertEnergeticSignatureSchema = createInsertSchema(energeticSignature).omit({
+  id: true,
+  created_at: true,
+});
+
+export type InsertEnergeticSignature = z.infer<typeof insertEnergeticSignatureSchema>;
+export type EnergeticSignature = typeof energeticSignature.$inferSelect;
+
+// Energetic Pattern model for storing user-generated combinations of signatures
+export const energeticPattern = pgTable("energetic_pattern", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  description: text("description"),
+  intention: text("intention"),
+  userId: integer("user_id").references(() => users.id),
+  signatures: json("signatures"), // Array of energetic signature IDs and their weights
+  visualSettings: json("visual_settings"), // Settings for the visualization
+  audioSettings: json("audio_settings"), // Settings for audio generation
+  created_at: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertEnergeticPatternSchema = createInsertSchema(energeticPattern).omit({
+  id: true,
+  created_at: true,
+});
+
+export type InsertEnergeticPattern = z.infer<typeof insertEnergeticPatternSchema>;
+export type EnergeticPattern = typeof energeticPattern.$inferSelect;
+
+// Crop Circle Formations - stores mathematical patterns of authentic crop circles
+export const cropCircleFormation = pgTable("crop_circle_formation", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  location: text("location"),
+  yearDiscovered: integer("year_discovered"),
+  description: text("description"),
+  mathematicalPattern: json("mathematical_pattern").notNull(), // Vector paths for drawing
+  energeticProperties: json("energetic_properties"), // Associated energetic properties
+  created_at: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertCropCircleFormationSchema = createInsertSchema(cropCircleFormation).omit({
+  id: true,
+  created_at: true,
+});
+
+export type InsertCropCircleFormation = z.infer<typeof insertCropCircleFormationSchema>;
+export type CropCircleFormation = typeof cropCircleFormation.$inferSelect;
