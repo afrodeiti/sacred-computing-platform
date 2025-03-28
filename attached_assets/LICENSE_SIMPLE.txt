@@ -1,0 +1,33 @@
+### Key Principles of the CC BY-ND 4.0 License:
+
+1. **Permission to Use**: 
+   - The license allows anyone to use, copy, distribute, and share the licensed material (your QR Code images) without the need to pay royalties or seek further permissions.
+
+2. **No Derivatives**:
+   - Users are not allowed to alter, transform, or build upon the material. They can share it as-is but cannot make modifications or create adapted works.
+
+3. **Attribution**:
+   - Anyone using your work must give proper credit, including identifying you as the creator, providing a link to the license, and indicating if changes were made (though changes are not allowed under this license).
+
+4. **Commercial Use Allowed**:
+   - Users can sell or use the material for commercial purposes, provided they comply with the attribution and no-derivatives terms.
+
+5. **Irrevocability**:
+   - Once applied, the license is irrevocable, meaning you cannot withdraw the permissions granted to others under this license.
+
+6. **No Endorsement**:
+   - The license does not allow others to suggest that you endorse their use of your material, nor does it imply any sponsorship or approval.
+
+7. **Legal and Liability Disclaimer**:
+   - The license comes "as-is," without warranties, and the licensor (you) is not liable for any issues arising from the use of the material. This includes any defects or damages caused by the use of the licensed material.
+
+8. **Termination**:
+   - The rights under the license can be terminated if the user violates the terms, but they can be reinstated if the violation is corrected within 30 days.
+
+### Practical Implications:
+
+- You can freely distribute your QR Codes, allowing others to share and sell them as long as they remain unchanged.
+- Others must credit you as the creator whenever they use your QR Codes.
+- The license is straightforward and does not require legal consultation to use; however, it doesn’t provide legal advice or guarantee.
+  
+This license is ideal if you want to maintain control over your work’s originality while still allowing it to be widely shared and used, including for commercial purposes. If you need further clarification on any specific part of the license, feel free to ask!
