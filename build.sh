@@ -79,8 +79,9 @@ npx esbuild server/production.ts --platform=node --packages=external --bundle --
 echo "Creating symlink for compatibility..."
 ln -sf production.js dist/index.js
 
-# Push the database schema
-echo "Pushing database schema..."
+# Make sure drizzle-kit is installed and push the database schema
+echo "Installing drizzle-kit and pushing database schema..."
+npm install -g drizzle-kit
 npx drizzle-kit push
 
 # Build database initialization script

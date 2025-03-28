@@ -78,6 +78,11 @@ async function broadcastMessage(message: WSMessage) {
 export async function registerRoutes(app: Express): Promise<Server> {
   const httpServer = createServer(app);
   
+  // Health check endpoint for Render
+  app.get('/health', (req, res) => {
+    res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
+  });
+  
   // Initialize WebSocket server on /ws path
   const wss = new WebSocketServer({ 
     server: httpServer, 
