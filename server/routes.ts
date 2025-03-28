@@ -297,13 +297,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Generate cymatic pattern representation using the generator
           const intentionFormData = await intentionFormGenerator(intention, frequency || 174);
           
-          // Add a message field for display
-          intentionFormData.message = `Intention "${intention}" transformed into physical cymatic pattern`;
+          // Create response data with message field for display
+          const responseData = {
+            ...intentionFormData,
+            message: `Intention "${intention}" transformed into physical cymatic pattern`
+          };
           
           // Broadcast the intention form data to all clients
           broadcastMessage({
             type: "INTENTION_FORM",
-            data: intentionFormData,
+            data: responseData,
             timestamp: new Date().toISOString()
           });
         }

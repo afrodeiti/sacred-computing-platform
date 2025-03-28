@@ -19,7 +19,7 @@ services:
           property: connectionString
       - key: OPENAI_API_KEY
         sync: false
-    healthCheckPath: /api/healing-codes
+    healthCheckPath: /health
 
 databases:
   - name: sacred-computing-db
