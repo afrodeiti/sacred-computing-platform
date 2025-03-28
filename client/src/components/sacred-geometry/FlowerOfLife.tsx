@@ -1,156 +1,184 @@
-import { useEffect, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 
-interface FlowerOfLifeProps {
+export interface FlowerOfLifeProps {
   size?: number;
   color?: string;
-  background?: string;
   animated?: boolean;
-  circleCount?: number;
 }
 
-export function FlowerOfLife({ 
-  size = 300, 
-  color = "#f0f0ff", 
-  background = "transparent",
-  animated = true,
-  circleCount = 19 
-}: FlowerOfLifeProps) {
+const FlowerOfLife: React.FC<FlowerOfLifeProps> = ({
+  size = 200,
+  color = '#ffffff',
+  animated = false
+}) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   
   useEffect(() => {
-    if (!canvasRef.current) return;
-    
     const canvas = canvasRef.current;
+    if (!canvas) return;
+    
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
     
-    // Clear canvas
-    ctx.clearRect(0, 0, size, size);
+    let animationFrameId: number;
+    let angle = 0;
     
-    // Set background if not transparent
-    if (background !== "transparent") {
-      ctx.fillStyle = background;
-      ctx.fillRect(0, 0, size, size);
-    }
+    // Set canvas size with device pixel ratio for sharp rendering
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = size * dpr;
+    canvas.height = size * dpr;
+    ctx.scale(dpr, dpr);
     
-    // Set drawing styles
-    ctx.strokeStyle = color;
-    ctx.lineWidth = 1;
-    
-    const centerX = size / 2;
-    const centerY = size / 2;
-    const radius = size / 7;
-    
-    const drawFlowerOfLife = (rotation = 0) => {
-      // Clear canvas
+    // Draw function
+    const draw = () => {
       ctx.clearRect(0, 0, size, size);
       
-      // Set background if not transparent
-      if (background !== "transparent") {
-        ctx.fillStyle = background;
-        ctx.fillRect(0, 0, size, size);
+      // Center of the canvas
+      const centerX = size / 2;
+      const centerY = size / 2;
+      
+      // Parameters for Flower of Life
+      const baseRadius = size * 0.08;
+      const circleCount = 19; // Number of circles
+      
+      // If animated, rotate
+      if (animated) {
+        angle += 0.005;
       }
       
       ctx.save();
-      if (rotation !== 0) {
-        ctx.translate(centerX, centerY);
-        ctx.rotate(rotation);
-        ctx.translate(-centerX, -centerY);
-      }
+      ctx.translate(centerX, centerY);
+      ctx.rotate(angle);
       
-      // Draw central circle
+      // Draw the first circle (center)
       ctx.beginPath();
-      ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+      ctx.arc(0, 0, baseRadius, 0, Math.PI * 2);
+      
+      // Create a radial gradient for subtle effect
+      const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, size * 0.4);
+      gradient.addColorStop(0, 'rgba(255, 255, 255, 0.9)');
+      gradient.addColorStop(0.7, 'rgba(180, 150, 255, 0.6)');
+      gradient.addColorStop(1, 'rgba(120, 90, 255, 0.1)');
+      
+      ctx.strokeStyle = gradient;
+      ctx.lineWidth = 1;
       ctx.stroke();
       
-      // Draw first ring of 6 circles
+      // Draw the first ring of 6 circles
+      const firstRingRadius = baseRadius * 2;
       for (let i = 0; i < 6; i++) {
-        const angle = (i / 6) * Math.PI * 2;
-        const x = centerX + radius * Math.cos(angle);
-        const y = centerY + radius * Math.sin(angle);
+        const theta = (i / 6) * Math.PI * 2;
+        const x = Math.cos(theta) * firstRingRadius;
+        const y = Math.sin(theta) * firstRingRadius;
         
         ctx.beginPath();
-        ctx.arc(x, y, radius, 0, Math.PI * 2);
+        ctx.arc(x, y, baseRadius, 0, Math.PI * 2);
         ctx.stroke();
       }
       
-      // Draw additional circle rings if needed
-      if (circleCount > 7) {
-        // Coordinates for second ring
-        interface Coordinate {
-          x: number;
-          y: number;
-        }
+      // Draw the second ring
+      const secondRingRadius = firstRingRadius * 2;
+      for (let i = 0; i < 12; i++) {
+        const theta = (i / 12) * Math.PI * 2 + Math.PI / 12;
+        const x = Math.cos(theta) * secondRingRadius;
+        const y = Math.sin(theta) * secondRingRadius;
         
-        const secondRingCoords: Coordinate[] = [];
-        for (let i = 0; i < 6; i++) {
-          const angle = (i / 6) * Math.PI * 2;
-          const baseX = centerX + radius * Math.cos(angle);
-          const baseY = centerY + radius * Math.sin(angle);
+        ctx.beginPath();
+        ctx.arc(x, y, baseRadius, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+      
+      // Draw the outer boundary circle
+      ctx.beginPath();
+      ctx.arc(0, 0, baseRadius * 8, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      
+      // Draw connecting lines (sacred geometry)
+      ctx.beginPath();
+      const connectionPoints = 12;
+      
+      for (let i = 0; i < connectionPoints; i++) {
+        const theta1 = (i / connectionPoints) * Math.PI * 2;
+        const x1 = Math.cos(theta1) * secondRingRadius;
+        const y1 = Math.sin(theta1) * secondRingRadius;
+        
+        for (let j = i + 1; j < connectionPoints; j++) {
+          const theta2 = (j / connectionPoints) * Math.PI * 2;
+          const x2 = Math.cos(theta2) * secondRingRadius;
+          const y2 = Math.sin(theta2) * secondRingRadius;
           
-          // Each base point spawns additional circles
-          for (let j = 1; j < 6; j++) {
-            const subAngle = ((j + i) / 6) * Math.PI * 2;
-            const x = baseX + radius * Math.cos(subAngle);
-            const y = baseY + radius * Math.sin(subAngle);
-            
-            // Check if this position is already in our list
-            const exists = secondRingCoords.some(coord => 
-              Math.abs(coord.x - x) < 1 && Math.abs(coord.y - y) < 1
-            );
-            
-            if (!exists) {
-              secondRingCoords.push({ x, y });
-            }
+          // Only draw some connections for a cleaner look
+          if ((i + j) % 3 === 0) {
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
           }
-        }
-        
-        // Draw second ring circles (up to circleCount)
-        const maxSecondRing = Math.min(secondRingCoords.length, circleCount - 7);
-        for (let i = 0; i < maxSecondRing; i++) {
-          const { x, y } = secondRingCoords[i];
-          ctx.beginPath();
-          ctx.arc(x, y, radius, 0, Math.PI * 2);
-          ctx.stroke();
         }
       }
       
-      // Draw outer circle encompassing the entire flower
-      ctx.beginPath();
-      ctx.arc(centerX, centerY, radius * 4, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+      ctx.lineWidth = 0.5;
       ctx.stroke();
       
+      // Add shimmer effect if animated
+      if (animated) {
+        // Draw energy particles
+        const particleCount = 30;
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+        
+        for (let i = 0; i < particleCount; i++) {
+          const particleAngle = (i / particleCount) * Math.PI * 2 + angle * 10;
+          const distance = Math.random() * baseRadius * 8;
+          const particleX = Math.cos(particleAngle) * distance;
+          const particleY = Math.sin(particleAngle) * distance;
+          
+          // Only draw particles near circle intersections
+          const particleSize = 1 + Math.random() * 1.5;
+          
+          ctx.beginPath();
+          ctx.arc(particleX, particleY, particleSize, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        
+        // Add pulsing effect
+        const pulseSize = Math.sin(angle * 8) * 0.2 + 1;
+        
+        ctx.beginPath();
+        ctx.arc(0, 0, baseRadius * pulseSize, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+        ctx.fill();
+      }
+      
       ctx.restore();
+      
+      if (animated) {
+        animationFrameId = requestAnimationFrame(draw);
+      }
     };
     
-    // Initial draw
-    drawFlowerOfLife();
+    draw();
     
-    // Animation loop
-    if (animated) {
-      let rotation = 0;
-      
-      const animate = () => {
-        rotation += 0.002;
-        drawFlowerOfLife(rotation);
-        requestAnimationFrame(animate);
-      };
-      
-      const animationFrame = requestAnimationFrame(animate);
-      
-      // Cleanup
-      return () => {
-        cancelAnimationFrame(animationFrame);
-      };
-    }
-  }, [size, color, background, animated, circleCount]);
+    return () => {
+      if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
+      }
+    };
+  }, [size, color, animated]);
   
   return (
-    <canvas 
-      ref={canvasRef} 
-      width={size} 
-      height={size} 
-      style={{ width: size, height: size }}
-    />
+    <div className={`sacred-geometry flower-of-life ${animated ? 'animated' : ''}`}>
+      <canvas 
+        ref={canvasRef} 
+        style={{ 
+          width: size, 
+          height: size,
+          transition: 'all 0.5s ease',
+          transform: animated ? 'scale(1.05)' : 'scale(1)'
+        }}
+      />
+    </div>
   );
-}
+};
+
+export default FlowerOfLife;

@@ -6,6 +6,7 @@ import NotFound from "@/pages/not-found";
 import Dashboard from "@/pages/dashboard";
 import HealingSearch from "@/pages/healing-search";
 import IntentionRecommendation from "@/pages/intention-recommendation";
+import SacredGeometryPage from "@/pages/sacred-geometry";
 import { SacredProvider } from "./context/sacred-context";
 import { ThemeProvider } from "./components/ui/theme-provider";
 
@@ -15,6 +16,7 @@ function Router() {
       <Route path="/" component={Dashboard} />
       <Route path="/healing-search" component={HealingSearch} />
       <Route path="/intention-recommendation" component={IntentionRecommendation} />
+      <Route path="/sacred-geometry" component={SacredGeometryPage} />
       <Route component={NotFound} />
     </Switch>
   );

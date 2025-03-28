@@ -1,139 +1,193 @@
-import { useEffect, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 
-interface TorusFieldProps {
+export interface TorusFieldProps {
   size?: number;
   color?: string;
-  background?: string;
   animated?: boolean;
+  frequency?: number;
 }
 
-export function TorusField({ 
-  size = 300, 
-  color = "#f0f0ff", 
-  background = "transparent",
-  animated = true 
-}: TorusFieldProps) {
+const TorusField: React.FC<TorusFieldProps> = ({
+  size = 200,
+  color = '#ffffff',
+  animated = false,
+  frequency = 7.83 // Schumann resonance default
+}) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   
   useEffect(() => {
-    if (!canvasRef.current) return;
-    
     const canvas = canvasRef.current;
+    if (!canvas) return;
+    
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
     
-    // Clear canvas
-    ctx.clearRect(0, 0, size, size);
+    // Convert frequency to animation speed
+    const animationSpeed = frequency / 20;
     
-    // Set background if not transparent
-    if (background !== "transparent") {
-      ctx.fillStyle = background;
-      ctx.fillRect(0, 0, size, size);
-    }
+    let animationFrameId: number;
+    let angle = 0;
     
-    // Set drawing styles
-    ctx.strokeStyle = color;
-    ctx.lineWidth = 1.5;
+    // Set canvas size with device pixel ratio for sharp rendering
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = size * dpr;
+    canvas.height = size * dpr;
+    ctx.scale(dpr, dpr);
     
-    const centerX = size / 2;
-    const centerY = size / 2;
-    const outerRadius = size * 0.4;
-    const innerRadius = outerRadius * 0.6;
-    
-    // Function to draw the torus
-    const drawTorus = (rotation = 0) => {
-      // Clear canvas
+    // Draw function
+    const draw = () => {
       ctx.clearRect(0, 0, size, size);
       
-      // Set background if not transparent
-      if (background !== "transparent") {
-        ctx.fillStyle = background;
-        ctx.fillRect(0, 0, size, size);
+      // Center of the canvas
+      const centerX = size / 2;
+      const centerY = size / 2;
+      
+      // Main torus parameters
+      const outerRadius = size * 0.35;
+      const innerRadius = size * 0.1;
+      const torusWidth = size * 0.06;
+      
+      // Calculate rotation based on frequency
+      if (animated) {
+        angle += 0.005 * animationSpeed;
       }
       
+      // Draw the outer torus
       ctx.save();
       ctx.translate(centerX, centerY);
-      ctx.rotate(rotation);
+      ctx.rotate(angle);
       
-      // Draw the outer ellipse (representation of the torus from a side view)
+      // Gradient for the torus
+      const gradient = ctx.createLinearGradient(-outerRadius, 0, outerRadius, 0);
+      gradient.addColorStop(0, 'rgba(120, 90, 255, 0.9)'); // Blue-purple
+      gradient.addColorStop(0.5, 'rgba(255, 100, 255, 0.9)'); // Pink
+      gradient.addColorStop(1, 'rgba(120, 90, 255, 0.9)'); // Blue-purple
+      
+      // Draw the main torus shape
       ctx.beginPath();
-      ctx.ellipse(0, 0, outerRadius, outerRadius * 0.4, 0, 0, Math.PI * 2);
-      ctx.stroke();
       
-      // Draw the inner ellipse (representation of the torus hole)
-      ctx.beginPath();
-      ctx.ellipse(0, 0, innerRadius, innerRadius * 0.4, 0, 0, Math.PI * 2);
-      ctx.stroke();
-      
-      // Draw flow lines to represent the energy circulating through the torus
-      const flowLinesCount = 12;
-      for (let i = 0; i < flowLinesCount; i++) {
-        const angle = (i / flowLinesCount) * Math.PI * 2;
-        const startX = Math.cos(angle) * outerRadius;
-        const startY = Math.sin(angle) * outerRadius * 0.4;
+      // Create the torus shape using an elliptical path
+      const steps = 100;
+      for (let i = 0; i <= steps; i++) {
+        const theta = (i / steps) * Math.PI * 2;
+        const x = Math.cos(theta) * outerRadius;
+        const y = Math.sin(theta) * outerRadius * 0.4; // Flattened to make it more like a torus field
         
-        ctx.beginPath();
-        // Draw a curved line to represent energy flow
-        ctx.moveTo(startX, startY);
+        // Add a modulation based on frequency
+        const modulationFactor = Math.sin(theta * 8 + angle * 5) * (frequency / 100);
+        const modOuterRadius = outerRadius * (1 + modulationFactor * 0.1);
         
-        // Control points for the curve
-        const cp1x = startX * 0.5;
-        const cp1y = -startY * 3; // Flow from top to bottom
-        const cp2x = -startX * 0.5;
-        const cp2y = -startY * 3;
-        const endX = -startX;
-        const endY = startY;
+        const modX = Math.cos(theta) * modOuterRadius;
+        const modY = Math.sin(theta) * modOuterRadius * 0.4;
         
-        ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, endX, endY);
-        ctx.stroke();
+        if (i === 0) {
+          ctx.moveTo(modX, modY);
+        } else {
+          ctx.lineTo(modX, modY);
+        }
       }
       
-      // Draw perpendicular view showing the torus from above
-      // (appears as two concentric circles)
-      ctx.translate(0, outerRadius * 1.2);
-      ctx.scale(1, 0.3); // Flatten to create perspective
+      ctx.fillStyle = gradient;
+      ctx.fill();
       
-      // Outer circle
+      // Inner circle representing the central flow
       ctx.beginPath();
-      ctx.arc(0, 0, outerRadius * 0.8, 0, Math.PI * 2);
-      ctx.stroke();
+      ctx.arc(0, 0, innerRadius, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+      ctx.fill();
       
-      // Inner circle
-      ctx.beginPath();
-      ctx.arc(0, 0, innerRadius * 0.8, 0, Math.PI * 2);
-      ctx.stroke();
+      // Energy flow lines
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+      
+      // Draw flow lines
+      for (let i = 0; i < 12; i++) {
+        const theta = (i / 12) * Math.PI * 2;
+        const startX = Math.cos(theta) * innerRadius;
+        const startY = Math.sin(theta) * innerRadius;
+        const endX = Math.cos(theta) * outerRadius * 1.1;
+        const endY = Math.sin(theta) * outerRadius * 0.45;
+        
+        ctx.beginPath();
+        ctx.moveTo(startX, startY);
+        
+        // Use a bezier curve to create a flow effect
+        const controlX1 = Math.cos(theta) * outerRadius * 0.5;
+        const controlY1 = Math.sin(theta) * outerRadius * 0.2;
+        const controlX2 = Math.cos(theta) * outerRadius * 0.8;
+        const controlY2 = Math.sin(theta) * outerRadius * 0.4;
+        
+        ctx.bezierCurveTo(controlX1, controlY1, controlX2, controlY2, endX, endY);
+        ctx.stroke();
+        
+        // Add energy nodes along the flow lines
+        const nodes = 3;
+        for (let j = 1; j <= nodes; j++) {
+          const t = j / (nodes + 1);
+          const nodeX = startX + t * (endX - startX);
+          const nodeY = startY + t * (endY - startY);
+          
+          ctx.beginPath();
+          ctx.arc(nodeX, nodeY, 1.5, 0, Math.PI * 2);
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+          ctx.fill();
+        }
+      }
       
       ctx.restore();
+      
+      // Particles around the torus
+      if (animated) {
+        const particleCount = Math.floor(frequency);
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+        
+        for (let i = 0; i < particleCount; i++) {
+          const particleAngle = (i / particleCount) * Math.PI * 2 + angle * 3;
+          const distance = outerRadius * (1 + 0.2 * Math.sin(angle * 2 + i));
+          const particleX = centerX + Math.cos(particleAngle) * distance;
+          const particleY = centerY + Math.sin(particleAngle) * distance * 0.4;
+          
+          const particleSize = 1 + Math.random() * 2;
+          
+          ctx.beginPath();
+          ctx.arc(particleX, particleY, particleSize, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+      
+      // Frequency indicator
+      ctx.fillStyle = '#ffffff';
+      ctx.font = '10px monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText(`${frequency.toFixed(2)} Hz`, centerX, centerY + size * 0.45);
+      
+      if (animated) {
+        animationFrameId = requestAnimationFrame(draw);
+      }
     };
     
-    // Initial draw
-    drawTorus();
+    draw();
     
-    // Animation loop
-    if (animated) {
-      let rotation = 0;
-      
-      const animate = () => {
-        rotation += 0.01;
-        drawTorus(rotation);
-        requestAnimationFrame(animate);
-      };
-      
-      const animationFrame = requestAnimationFrame(animate);
-      
-      // Cleanup
-      return () => {
-        cancelAnimationFrame(animationFrame);
-      };
-    }
-  }, [size, color, background, animated]);
+    return () => {
+      if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
+      }
+    };
+  }, [size, color, animated, frequency]);
   
   return (
-    <canvas 
-      ref={canvasRef} 
-      width={size} 
-      height={size} 
-      style={{ width: size, height: size }}
-    />
+    <div className={`sacred-geometry torus-field ${animated ? 'animated' : ''}`}>
+      <canvas 
+        ref={canvasRef} 
+        style={{ 
+          width: size, 
+          height: size,
+          transition: 'all 0.5s ease',
+          transform: animated ? 'scale(1.05)' : 'scale(1)'
+        }}
+      />
+    </div>
   );
-}
+};
+
+export default TorusField;

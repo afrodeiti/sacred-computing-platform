@@ -1,189 +1,326 @@
-import { useEffect, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 
-interface MetatronsCubeProps {
+export interface MetatronsCubeProps {
   size?: number;
   color?: string;
-  background?: string;
   animated?: boolean;
   boost?: boolean;
 }
 
-export function MetatronsCube({ 
-  size = 300, 
-  color = "#f0f0ff", 
-  background = "transparent",
-  animated = true,
+const MetatronsCube: React.FC<MetatronsCubeProps> = ({
+  size = 200,
+  color = '#ffffff',
+  animated = false,
   boost = false
-}: MetatronsCubeProps) {
+}) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   
   useEffect(() => {
-    if (!canvasRef.current) return;
-    
     const canvas = canvasRef.current;
+    if (!canvas) return;
+    
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
     
-    // Clear canvas
-    ctx.clearRect(0, 0, size, size);
+    let animationFrameId: number;
+    let angle = 0;
     
-    // Set background if not transparent
-    if (background !== "transparent") {
-      ctx.fillStyle = background;
-      ctx.fillRect(0, 0, size, size);
-    }
+    // Set canvas size with device pixel ratio for sharp rendering
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = size * dpr;
+    canvas.height = size * dpr;
+    ctx.scale(dpr, dpr);
     
-    // Set drawing styles
-    ctx.strokeStyle = color;
-    ctx.lineWidth = 1;
-    
-    const centerX = size / 2;
-    const centerY = size / 2;
-    const radius = size * 0.4;
-    
-    // Draw Metatron's Cube
-    const drawMetatronsCube = (rotation = 0) => {
-      // Clear canvas
+    // Draw function
+    const draw = () => {
       ctx.clearRect(0, 0, size, size);
       
-      // Set background if not transparent
-      if (background !== "transparent") {
-        ctx.fillStyle = background;
-        ctx.fillRect(0, 0, size, size);
+      // Center of the canvas
+      const centerX = size / 2;
+      const centerY = size / 2;
+      
+      // Metatron's Cube parameters
+      const maxRadius = size * 0.4;
+      const nodeCount = 13; // Central node plus 12 outer nodes
+      
+      // Update angle for animation
+      if (animated) {
+        angle += 0.005;
       }
       
       ctx.save();
-      if (rotation !== 0) {
-        ctx.translate(centerX, centerY);
-        ctx.rotate(rotation);
-        ctx.translate(-centerX, -centerY);
+      ctx.translate(centerX, centerY);
+      
+      if (animated) {
+        ctx.rotate(angle * 0.1);
       }
       
-      // 1. Draw the center circle
+      // Draw the outer circle
       ctx.beginPath();
-      ctx.arc(centerX, centerY, radius * 0.08, 0, Math.PI * 2);
-      ctx.fillStyle = color;
-      ctx.fill();
+      ctx.arc(0, 0, maxRadius, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+      ctx.lineWidth = 1;
+      ctx.stroke();
       
-      // 2. Draw the first ring of 6 circles
-      const firstRingPoints = [];
-      for (let i = 0; i < 6; i++) {
-        const angle = (i / 6) * Math.PI * 2;
-        const x = centerX + radius * 0.4 * Math.cos(angle);
-        const y = centerY + radius * 0.4 * Math.sin(angle);
+      // Draw the Fruit of Life pattern (13 circles)
+      const innerRadius = maxRadius * 0.1; // Radius of each small circle
+      
+      // Define the positions of the 13 circles
+      const positions = [
+        { x: 0, y: 0 }, // Center
         
-        firstRingPoints.push({ x, y });
+        // First ring - 6 circles
+        { x: 0, y: -maxRadius * 0.4 },
+        { x: maxRadius * 0.35, y: -maxRadius * 0.2 },
+        { x: maxRadius * 0.35, y: maxRadius * 0.2 },
+        { x: 0, y: maxRadius * 0.4 },
+        { x: -maxRadius * 0.35, y: maxRadius * 0.2 },
+        { x: -maxRadius * 0.35, y: -maxRadius * 0.2 },
         
-        // Draw circle at this point
+        // Second ring - 6 more circles
+        { x: 0, y: -maxRadius * 0.8 },
+        { x: maxRadius * 0.7, y: -maxRadius * 0.4 },
+        { x: maxRadius * 0.7, y: maxRadius * 0.4 },
+        { x: 0, y: maxRadius * 0.8 },
+        { x: -maxRadius * 0.7, y: maxRadius * 0.4 },
+        { x: -maxRadius * 0.7, y: -maxRadius * 0.4 }
+      ];
+      
+      // Draw each circle
+      positions.forEach((pos, index) => {
+        // Add animation effect to positions if needed
+        let drawX = pos.x;
+        let drawY = pos.y;
+        
+        if (animated && index > 0) {
+          // Add subtle movement to outer nodes
+          const orbitSpeed = index % 2 === 0 ? 1 : -1;
+          const orbitRadius = index > 6 ? 0.05 : 0.03;
+          drawX += Math.cos(angle * orbitSpeed + index) * maxRadius * orbitRadius;
+          drawY += Math.sin(angle * orbitSpeed + index) * maxRadius * orbitRadius;
+        }
+        
         ctx.beginPath();
-        ctx.arc(x, y, radius * 0.08, 0, Math.PI * 2);
-        ctx.fillStyle = color;
-        ctx.fill();
+        ctx.arc(drawX, drawY, innerRadius, 0, Math.PI * 2);
+        
+        // Different styling based on position
+        if (index === 0) {
+          // Central circle
+          const centerGradient = ctx.createRadialGradient(0, 0, 0, 0, 0, innerRadius);
+          centerGradient.addColorStop(0, 'rgba(255, 255, 255, 0.9)');
+          centerGradient.addColorStop(1, 'rgba(180, 180, 255, 0.5)');
+          
+          ctx.fillStyle = centerGradient;
+          ctx.fill();
+        } else {
+          // Outer circles
+          const intensity = boost ? 0.7 : 0.5;
+          let circleColor;
+          
+          if (index <= 6) {
+            // First ring - more blue/purple
+            circleColor = `rgba(180, 160, 255, ${intensity})`;
+          } else {
+            // Second ring - more pink/violet
+            circleColor = `rgba(220, 140, 255, ${intensity})`;
+          }
+          
+          ctx.fillStyle = circleColor;
+          ctx.fill();
+          
+          // Add subtle glow effect
+          if (boost || animated) {
+            ctx.shadowColor = circleColor;
+            ctx.shadowBlur = 5;
+          }
+        }
+        
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+        ctx.lineWidth = 0.5;
+        ctx.stroke();
+        
+        ctx.shadowBlur = 0;
+      });
+      
+      // Draw the connecting lines - full Metatron's Cube
+      ctx.beginPath();
+      
+      // Connect all points to create the Metatron's Cube pattern
+      for (let i = 0; i < positions.length; i++) {
+        for (let j = i + 1; j < positions.length; j++) {
+          // Skip some connections to avoid overloading
+          const distance = Math.sqrt(
+            Math.pow(positions[i].x - positions[j].x, 2) + 
+            Math.pow(positions[i].y - positions[j].y, 2)
+          );
+          
+          // Only draw lines between nearby nodes
+          if (distance < maxRadius * 0.8) {
+            ctx.moveTo(positions[i].x, positions[i].y);
+            ctx.lineTo(positions[j].x, positions[j].y);
+          }
+        }
       }
       
-      // 3. Draw the second ring (if boosted)
-      const secondRingPoints = [];
+      const lineGradient = ctx.createLinearGradient(
+        -maxRadius, -maxRadius, maxRadius, maxRadius
+      );
+      lineGradient.addColorStop(0, 'rgba(150, 100, 255, 0.2)');
+      lineGradient.addColorStop(0.5, 'rgba(255, 150, 255, 0.2)');
+      lineGradient.addColorStop(1, 'rgba(150, 100, 255, 0.2)');
+      
+      ctx.strokeStyle = lineGradient;
+      ctx.lineWidth = 0.5;
+      ctx.stroke();
+      
+      // Draw platonic solids (simplified outlines)
       if (boost) {
-        for (let i = 0; i < 12; i++) {
-          const angle = (i / 12) * Math.PI * 2;
-          const x = centerX + radius * 0.8 * Math.cos(angle);
-          const y = centerY + radius * 0.8 * Math.sin(angle);
+        // Draw cube (hexahedron)
+        const cubeSize = maxRadius * 0.5;
+        ctx.beginPath();
+        
+        // Front face
+        ctx.moveTo(-cubeSize/2, -cubeSize/2);
+        ctx.lineTo(cubeSize/2, -cubeSize/2);
+        ctx.lineTo(cubeSize/2, cubeSize/2);
+        ctx.lineTo(-cubeSize/2, cubeSize/2);
+        ctx.lineTo(-cubeSize/2, -cubeSize/2);
+        
+        // Back face connections
+        ctx.moveTo(-cubeSize/3, -cubeSize/3);
+        ctx.lineTo(cubeSize/3, -cubeSize/3);
+        ctx.lineTo(cubeSize/3, cubeSize/3);
+        ctx.lineTo(-cubeSize/3, cubeSize/3);
+        ctx.lineTo(-cubeSize/3, -cubeSize/3);
+        
+        // Connect front to back
+        ctx.moveTo(-cubeSize/2, -cubeSize/2);
+        ctx.lineTo(-cubeSize/3, -cubeSize/3);
+        ctx.moveTo(cubeSize/2, -cubeSize/2);
+        ctx.lineTo(cubeSize/3, -cubeSize/3);
+        ctx.moveTo(cubeSize/2, cubeSize/2);
+        ctx.lineTo(cubeSize/3, cubeSize/3);
+        ctx.moveTo(-cubeSize/2, cubeSize/2);
+        ctx.lineTo(-cubeSize/3, cubeSize/3);
+        
+        ctx.strokeStyle = 'rgba(255, 180, 255, 0.15)';
+        ctx.lineWidth = 0.5;
+        ctx.stroke();
+        
+        // Draw tetrahedron outline
+        const tetraSize = maxRadius * 0.6;
+        ctx.beginPath();
+        
+        // Base triangle
+        const triHeight = tetraSize * Math.sqrt(3) / 2;
+        ctx.moveTo(0, -triHeight * 2/3);
+        ctx.lineTo(tetraSize/2, triHeight * 1/3);
+        ctx.lineTo(-tetraSize/2, triHeight * 1/3);
+        ctx.closePath();
+        
+        // Connect to apex
+        ctx.moveTo(0, -triHeight * 2/3);
+        ctx.lineTo(0, 0);
+        ctx.moveTo(tetraSize/2, triHeight * 1/3);
+        ctx.lineTo(0, 0);
+        ctx.moveTo(-tetraSize/2, triHeight * 1/3);
+        ctx.lineTo(0, 0);
+        
+        ctx.strokeStyle = 'rgba(180, 255, 255, 0.1)';
+        ctx.lineWidth = 0.5;
+        ctx.stroke();
+      }
+      
+      // Add energy particles if animated
+      if (animated) {
+        const particleCount = boost ? 30 : 15;
+        
+        for (let i = 0; i < particleCount; i++) {
+          const particleAngle = (i / particleCount) * Math.PI * 2 + angle * 3;
+          const particleDistance = maxRadius * (0.2 + Math.random() * 0.7);
+          const particleX = Math.cos(particleAngle) * particleDistance;
+          const particleY = Math.sin(particleAngle) * particleDistance;
           
-          secondRingPoints.push({ x, y });
+          const particleSize = 1 + Math.random() * 1.5;
           
-          // Draw circle at this point
           ctx.beginPath();
-          ctx.arc(x, y, radius * 0.08, 0, Math.PI * 2);
-          ctx.fillStyle = color;
+          ctx.arc(particleX, particleY, particleSize, 0, Math.PI * 2);
+          
+          // Particles color based on position
+          const distanceRatio = particleDistance / maxRadius;
+          if (distanceRatio < 0.4) {
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+          } else if (distanceRatio < 0.7) {
+            ctx.fillStyle = 'rgba(200, 180, 255, 0.7)';
+          } else {
+            ctx.fillStyle = 'rgba(150, 100, 255, 0.6)';
+          }
+          
           ctx.fill();
         }
       }
       
-      // 4. Connect the points to form the cube pattern
-      
-      // Connect center to all first ring points
-      for (const point of firstRingPoints) {
+      // Add boost indicators
+      if (boost) {
+        // Draw energy field
         ctx.beginPath();
-        ctx.moveTo(centerX, centerY);
-        ctx.lineTo(point.x, point.y);
-        ctx.stroke();
-      }
-      
-      // Connect first ring points to each other
-      for (let i = 0; i < firstRingPoints.length; i++) {
-        for (let j = i + 1; j < firstRingPoints.length; j++) {
-          ctx.beginPath();
-          ctx.moveTo(firstRingPoints[i].x, firstRingPoints[i].y);
-          ctx.lineTo(firstRingPoints[j].x, firstRingPoints[j].y);
-          ctx.stroke();
-        }
-      }
-      
-      // If boosted, connect to second ring
-      if (boost && secondRingPoints.length > 0) {
-        // Connect first ring to second ring
-        for (const innerPoint of firstRingPoints) {
-          for (const outerPoint of secondRingPoints) {
-            // Only connect points that are within a certain angle to avoid excessive lines
-            const angle = Math.atan2(outerPoint.y - innerPoint.y, outerPoint.x - innerPoint.x);
-            const originalAngle = Math.atan2(innerPoint.y - centerY, innerPoint.x - centerX);
-            const angleDiff = Math.abs(angle - originalAngle);
+        ctx.arc(0, 0, maxRadius * 1.05, 0, Math.PI * 2);
+        
+        const boostGradient = ctx.createRadialGradient(
+          0, 0, maxRadius * 0.5,
+          0, 0, maxRadius * 1.05
+        );
+        boostGradient.addColorStop(0, 'rgba(255, 255, 255, 0)');
+        boostGradient.addColorStop(1, 'rgba(180, 100, 255, 0.15)');
+        
+        ctx.fillStyle = boostGradient;
+        ctx.fill();
+        
+        // Add pulses if animated
+        if (animated) {
+          const pulseCount = 3;
+          for (let i = 0; i < pulseCount; i++) {
+            const pulsePhase = (i / pulseCount) * Math.PI * 2;
+            const pulseSize = 0.8 + 0.3 * Math.sin(angle * 5 + pulsePhase);
             
-            if (angleDiff < Math.PI / 4 || angleDiff > Math.PI * 7 / 4) {
-              ctx.beginPath();
-              ctx.moveTo(innerPoint.x, innerPoint.y);
-              ctx.lineTo(outerPoint.x, outerPoint.y);
-              ctx.stroke();
-            }
+            ctx.beginPath();
+            ctx.arc(0, 0, maxRadius * pulseSize, 0, Math.PI * 2);
+            ctx.strokeStyle = `rgba(255, 200, 255, ${0.1 * Math.sin(angle * 5 + pulsePhase) ** 2})`;
+            ctx.lineWidth = 1;
+            ctx.stroke();
           }
         }
-        
-        // Connect second ring points to adjacent points
-        for (let i = 0; i < secondRingPoints.length; i++) {
-          const next = (i + 1) % secondRingPoints.length;
-          ctx.beginPath();
-          ctx.moveTo(secondRingPoints[i].x, secondRingPoints[i].y);
-          ctx.lineTo(secondRingPoints[next].x, secondRingPoints[next].y);
-          ctx.stroke();
-        }
       }
       
-      // Draw outer circle
-      ctx.beginPath();
-      ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
-      ctx.stroke();
-      
       ctx.restore();
+      
+      if (animated) {
+        animationFrameId = requestAnimationFrame(draw);
+      }
     };
     
-    // Initial draw
-    drawMetatronsCube();
+    draw();
     
-    // Animation loop
-    if (animated) {
-      let rotation = 0;
-      
-      const animate = () => {
-        rotation += 0.005;
-        drawMetatronsCube(rotation);
-        requestAnimationFrame(animate);
-      };
-      
-      const animationFrame = requestAnimationFrame(animate);
-      
-      // Cleanup
-      return () => {
-        cancelAnimationFrame(animationFrame);
-      };
-    }
-  }, [size, color, background, animated, boost]);
+    return () => {
+      if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
+      }
+    };
+  }, [size, color, animated, boost]);
   
   return (
-    <canvas 
-      ref={canvasRef} 
-      width={size} 
-      height={size} 
-      style={{ width: size, height: size }}
-    />
+    <div className={`sacred-geometry metatrons-cube ${animated ? 'animated' : ''} ${boost ? 'boosted' : ''}`}>
+      <canvas 
+        ref={canvasRef} 
+        style={{ 
+          width: size, 
+          height: size,
+          transition: 'all 0.5s ease',
+          transform: animated ? 'scale(1.05)' : 'scale(1)'
+        }}
+      />
+    </div>
   );
-}
+};
+
+export default MetatronsCube;
