@@ -151,9 +151,23 @@ export default function Dashboard() {
       {/* Sacred geometry showcase */}
       <section className="py-12 bg-gradient-to-r from-gray-900 via-indigo-950 to-gray-900">
         <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center text-white mb-12">
+          <h2 className="text-3xl font-bold text-center text-white mb-4">
             Sacred Geometry Patterns
           </h2>
+          <div className="text-center mb-12">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              <Button asChild className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700">
+                <Link href="/sacred-geometry-interactive">
+                  Interactive Sacred Geometry
+                </Link>
+              </Button>
+              <Button asChild className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700">
+                <Link href="/sacred-geometry">
+                  Sacred Geometry Visualizer
+                </Link>
+              </Button>
+            </div>
+          </div>
           
           <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-8">
             {FIELD_TYPES.map((field, index) => (
