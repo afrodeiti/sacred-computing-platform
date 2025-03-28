@@ -5,8 +5,11 @@ import {
   energeticSignature, type EnergeticSignature, type InsertEnergeticSignature,
   energeticPattern, type EnergeticPattern, type InsertEnergeticPattern,
   cropCircleFormation, type CropCircleFormation, type InsertCropCircleFormation,
-  spiritCommunication, type SpiritCommunication, type InsertSpiritCommunication
+  spiritCommunication, type SpiritCommunication, type InsertSpiritCommunication,
+  chakra, type Chakra, type InsertChakra,
+  chakraHealingSession, type ChakraHealingSession, type InsertChakraHealingSession
 } from "@shared/schema";
+import { sql } from "drizzle-orm";
 
 export interface IStorage {
   // User methods
@@ -50,6 +53,19 @@ export interface IStorage {
   getSpiritCommunicationById(id: number): Promise<SpiritCommunication | undefined>;
   getUserSpiritCommunications(userId: number): Promise<SpiritCommunication[]>;
   createSpiritCommunication(communication: InsertSpiritCommunication): Promise<SpiritCommunication>;
+  
+  // Chakra methods
+  getChakras(): Promise<Chakra[]>;
+  getChakraById(id: number): Promise<Chakra | undefined>;
+  getChakraByNumber(number: number): Promise<Chakra | undefined>;
+  createChakra(chakra: InsertChakra): Promise<Chakra>;
+  
+  // Chakra Healing Session methods
+  getChakraHealingSessions(): Promise<ChakraHealingSession[]>;
+  getChakraHealingSessionById(id: number): Promise<ChakraHealingSession | undefined>;
+  getUserChakraHealingSessions(userId: number): Promise<ChakraHealingSession[]>;
+  createChakraHealingSession(session: InsertChakraHealingSession): Promise<ChakraHealingSession>;
+  updateChakraHealingSessionStatus(id: number, status: string): Promise<ChakraHealingSession | undefined>;
 }
 
 export class MemStorage implements IStorage {
@@ -60,6 +76,8 @@ export class MemStorage implements IStorage {
   private energeticPatterns: Map<number, EnergeticPattern>;
   private cropCircleFormations: Map<number, CropCircleFormation>;
   private spiritCommunications: Map<number, SpiritCommunication>;
+  private chakras: Map<number, Chakra>;
+  private chakraHealingSessions: Map<number, ChakraHealingSession>;
   
   currentUserId: number;
   currentArchiveId: number;
@@ -68,6 +86,8 @@ export class MemStorage implements IStorage {
   currentPatternId: number;
   currentFormationId: number;
   currentCommunicationId: number;
+  currentChakraId: number;
+  currentChakraHealingSessionId: number;
 
   constructor() {
     this.users = new Map();
@@ -77,6 +97,8 @@ export class MemStorage implements IStorage {
     this.energeticPatterns = new Map();
     this.cropCircleFormations = new Map();
     this.spiritCommunications = new Map();
+    this.chakras = new Map();
+    this.chakraHealingSessions = new Map();
     
     this.currentUserId = 1;
     this.currentArchiveId = 1;
@@ -85,11 +107,14 @@ export class MemStorage implements IStorage {
     this.currentPatternId = 1;
     this.currentFormationId = 1;
     this.currentCommunicationId = 1;
+    this.currentChakraId = 1;
+    this.currentChakraHealingSessionId = 1;
     
     // Initialize with sample data
     this.initializeHealingCodes();
     this.initializeEnergeticSignatures();
     this.initializeCropCircleFormations();
+    this.initializeChakras();
   }
 
   // User methods
@@ -455,6 +480,260 @@ export class MemStorage implements IStorage {
     });
   }
   
+  // Chakra methods
+  async getChakras(): Promise<Chakra[]> {
+    return Array.from(this.chakras.values()).sort((a, b) => a.number - b.number);
+  }
+  
+  async getChakraById(id: number): Promise<Chakra | undefined> {
+    return this.chakras.get(id);
+  }
+  
+  async getChakraByNumber(number: number): Promise<Chakra | undefined> {
+    return Array.from(this.chakras.values()).find(c => c.number === number);
+  }
+  
+  async createChakra(chakraData: InsertChakra): Promise<Chakra> {
+    const id = this.currentChakraId++;
+    
+    const chakra: Chakra = {
+      id,
+      name: chakraData.name,
+      sanskritName: chakraData.sanskritName ?? null,
+      number: chakraData.number,
+      color: chakraData.color,
+      location: chakraData.location,
+      description: chakraData.description,
+      healingCode: chakraData.healingCode,
+      keywords: chakraData.keywords ?? null,
+      elementalAssociation: chakraData.elementalAssociation ?? null,
+      soundAssociation: chakraData.soundAssociation ?? null,
+      qrCodePath: chakraData.qrCodePath
+    };
+    
+    this.chakras.set(id, chakra);
+    return chakra;
+  }
+  
+  // Chakra Healing Session methods
+  async getChakraHealingSessions(): Promise<ChakraHealingSession[]> {
+    return Array.from(this.chakraHealingSessions.values()).sort((a, b) => 
+      new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+    );
+  }
+  
+  async getChakraHealingSessionById(id: number): Promise<ChakraHealingSession | undefined> {
+    return this.chakraHealingSessions.get(id);
+  }
+  
+  async getUserChakraHealingSessions(userId: number): Promise<ChakraHealingSession[]> {
+    return Array.from(this.chakraHealingSessions.values())
+      .filter(session => session.userId === userId)
+      .sort((a, b) => 
+        new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+      );
+  }
+  
+  async createChakraHealingSession(session: InsertChakraHealingSession): Promise<ChakraHealingSession> {
+    const id = this.currentChakraHealingSessionId++;
+    const now = new Date();
+    
+    const chakraHealingSession: ChakraHealingSession = {
+      id,
+      chakraId: session.chakraId,
+      userId: session.userId ?? null,
+      intention: session.intention,
+      duration: session.duration,
+      intensity: session.intensity ?? 5,
+      repetitions: session.repetitions ?? 108,
+      useFrequency: session.useFrequency ?? true,
+      frequency: session.frequency ?? null,
+      timestamp: now,
+      notes: session.notes ?? null,
+      status: session.status ?? "completed"
+    };
+    
+    this.chakraHealingSessions.set(id, chakraHealingSession);
+    return chakraHealingSession;
+  }
+  
+  async updateChakraHealingSessionStatus(id: number, status: string): Promise<ChakraHealingSession | undefined> {
+    const session = await this.getChakraHealingSessionById(id);
+    if (!session) return undefined;
+    
+    const updatedSession = { ...session, status };
+    this.chakraHealingSessions.set(id, updatedSession);
+    return updatedSession;
+  }
+  
+  // Initialization methods
+  private initializeChakras() {
+    // Initialize the 12 chakras from the QR code assets
+    const chakraData = [
+      {
+        name: "Root Chakra",
+        sanskritName: "Muladhara",
+        number: 1,
+        color: "#fd4016", // Red
+        location: "Base of spine",
+        description: "Grounding and stability. Governs survival instincts, security, and basic needs.",
+        healingCode: "2900855F872CC24FAA5F6BEEF80CCB32064C050497E8AD8EB7079E66690BF0049F0DB4E3D10CAE597A001B3E23466F46DE60C05C757BD72087F270916707D64E",
+        keywords: ["security", "survival", "grounding", "stability", "basic needs"],
+        elementalAssociation: "Earth",
+        soundAssociation: "LAM",
+        qrCodePath: "@assets/1. Root Chakra.png"
+      },
+      {
+        name: "Sacral Chakra",
+        sanskritName: "Svadhishthana",
+        number: 2,
+        color: "#ff992f", // Orange
+        location: "Lower abdomen, about 2 inches below navel",
+        description: "Stimulates pleasure and creativity. Governs emotional well-being, sexuality, and creative expression.",
+        healingCode: "79E026C6F58E6C55A959892829276E0D1105157118C6F843912BBF8F0E372C951C15F02DB37999EA784EFC1F0C22F24D3E034F1DBE26B3FE1E4DFF1D102B0356",
+        keywords: ["creativity", "sexuality", "pleasure", "emotions", "relationships"],
+        elementalAssociation: "Water",
+        soundAssociation: "VAM",
+        qrCodePath: "@assets/2. Sacral Chakra.png"
+      },
+      {
+        name: "Solar Plexus Chakra",
+        sanskritName: "Manipura",
+        number: 3,
+        color: "#fff150", // Yellow
+        location: "Upper abdomen, stomach area",
+        description: "Promotes confidence and energy. Governs personal power, will, and assertiveness.",
+        healingCode: "510B68A89DD1A837EAA3F87E72A44A6D3006C23B23DC48938DA8C4925711C3368E50DB172081F9C542A68FE31E4CF17890DA961BD4469AFFCCDBFBEB38C4F0C7",
+        keywords: ["personal power", "self-esteem", "confidence", "energy", "will"],
+        elementalAssociation: "Fire",
+        soundAssociation: "RAM",
+        qrCodePath: "@assets/3. Solar Plexus Chakra.png"
+      },
+      {
+        name: "Heart Chakra",
+        sanskritName: "Anahata",
+        number: 4,
+        color: "#77cc95", // Green
+        location: "Center of chest, heart area",
+        description: "Fosters healing and compassion. Governs love, compassion, and balance between physical and spiritual realms.",
+        healingCode: "B43D197B2F113EAAF360568C35D7646BFE845590D5FC6CCEB6241DCF69020CC04768E0493FCF63187EF69C9F1F00B6C26F076299786C267A4EEE8513C5F75B1E",
+        keywords: ["love", "compassion", "forgiveness", "healing", "balance"],
+        elementalAssociation: "Air",
+        soundAssociation: "YAM",
+        qrCodePath: "@assets/4. Heart Chakra.png"
+      },
+      {
+        name: "Throat Chakra",
+        sanskritName: "Vishuddha",
+        number: 5,
+        color: "#37a6f5", // Blue
+        location: "Throat area",
+        description: "Enhances clarity and truth. Governs communication, self-expression, and speaking truth.",
+        healingCode: "117B00D87E4A57A3EC99BCD9DC69266C17B06EC2AE30CCA476126D9F7AC294E7A406C04C12041250E3221C8160CAC32C91019688E07A5308739EA07DA585D9C3",
+        keywords: ["communication", "truth", "expression", "clarity", "voice"],
+        elementalAssociation: "Ether",
+        soundAssociation: "HAM",
+        qrCodePath: "@assets/5. Throat Chakra.png"
+      },
+      {
+        name: "Third Eye Chakra",
+        sanskritName: "Ajna",
+        number: 6,
+        color: "#614ea8", // Indigo
+        location: "Forehead, between the eyes",
+        description: "Aids in spiritual awareness and perception. Governs intuition, insight, and access to deeper wisdom.",
+        healingCode: "470B22B7368067FE471EF3651E6CAE1E910897FD41D1EDE7D270A0203F8FB8651DD05153E0AED620FB1F45EBBCB1586C2DA679118DE06FED5D345971832918F5",
+        keywords: ["intuition", "insight", "perception", "awareness", "wisdom"],
+        elementalAssociation: "Light",
+        soundAssociation: "OM",
+        qrCodePath: "@assets/6. Third Eye Chakra.png"
+      },
+      {
+        name: "Crown Chakra",
+        sanskritName: "Sahasrara",
+        number: 7,
+        color: "#cc81bc", // Violet
+        location: "Top of the head",
+        description: "Promotes higher consciousness and unity. Governs spiritual connection, divine wisdom, and universal consciousness.",
+        healingCode: "80B5F5483D921BF8BC261C939A645CF94BB036A2164F9351FC25AFDA50A66DAE1A53FDEA6080070A5B89861FAE8147CEF9D9A6B8B6DDE28C81F70A49AFC0DA61",
+        keywords: ["spirituality", "divine connection", "enlightenment", "consciousness", "unity"],
+        elementalAssociation: "Thought",
+        soundAssociation: "Silence",
+        qrCodePath: "@assets/7. Crown Chakra.png"
+      },
+      {
+        name: "Earth Star Chakra",
+        sanskritName: null,
+        number: 8,
+        color: "#8B4513", // Brown
+        location: "Below feet, into the Earth",
+        description: "Grounding and connection to the Earth. Anchors higher dimensional energies into physical reality.",
+        healingCode: "6D234FFA6EAEE55BBF86D869CB4E5C3A727382CEDE08A285964D7B5D7F5F11EAF320DD4F15909E35310688AF97717987F09699B2F898BBE5D7C3278C2DB8887B",
+        keywords: ["grounding", "anchoring", "stability", "earth connection", "physical reality"],
+        elementalAssociation: "Earth core",
+        soundAssociation: "HA",
+        qrCodePath: "@assets/8. Earth Star Chakra.png"
+      },
+      {
+        name: "Soul Star Chakra",
+        sanskritName: null,
+        number: 9,
+        color: "#FFFFFF", // White
+        location: "Above the crown",
+        description: "Represents spiritual enlightenment and connection to the higher self. Gateway to higher dimensions.",
+        healingCode: "B068BE04CFB0F8AF7DA78962EC57872E54949ADD6C73D9A45D8CEC7BD6D91CE85D6E4280C6C9F6A2F1BCE6A5913AF57F73F4D2B1F61D4C467C029EF6914D9FB4",
+        keywords: ["higher self", "enlightenment", "ascension", "spiritual growth", "soul purpose"],
+        elementalAssociation: "Cosmic energy",
+        soundAssociation: "MA",
+        qrCodePath: "@assets/9. Soul Star Chakra.png"
+      },
+      {
+        name: "Higher Heart Chakra",
+        sanskritName: null,
+        number: 10,
+        color: "#FF69B4", // Pink
+        location: "Between heart and throat chakras",
+        description: "Symbolizes unconditional love and compassion. Bridge between emotional and communicative aspects of being.",
+        healingCode: "8BDCE0D4C18FD09263EBBD61ED67B4A67714A0C17676E80D6936D08744C486DDB15309AE343A875A055A5B3DA343DFE1939DF52ED7058F4EA164A205E66E77C0",
+        keywords: ["unconditional love", "compassion", "higher heart", "divine love", "selflessness"],
+        elementalAssociation: "Higher compassion",
+        soundAssociation: "HUM",
+        qrCodePath: "@assets/10. Higher Heart Chakra.png"
+      },
+      {
+        name: "Causal Chakra",
+        sanskritName: null,
+        number: 11,
+        color: "#C0C0C0", // Silver
+        location: "Back of the head",
+        description: "Represents higher consciousness and spiritual insight. Access to past lives and karmic patterns.",
+        healingCode: "222F59426ADB2D16A1E8F9DD8DCE948A8E56A2B46D9FFF3399040E2FD025531B688A4A0D0974A844ACBED2B4FB374A8570C6CF62CA317803329CE62903A36D02",
+        keywords: ["karma", "past lives", "higher consciousness", "spiritual insight", "divine timing"],
+        elementalAssociation: "Akashic records",
+        soundAssociation: "OM AH HUM",
+        qrCodePath: "@assets/11. Causal Chakra.png"
+      },
+      {
+        name: "Stellar Gateway Chakra",
+        sanskritName: null,
+        number: 12,
+        color: "#FFD700", // Gold
+        location: "Above the soul star chakra",
+        description: "Symbolizes divine connection and spiritual ascension. Highest connection point to universal consciousness.",
+        healingCode: "D50E4BA8C61E0734E5310A76DEA86371C6BF7186813E2A5A9789743A09892A32413780133E0DAC8819EAC5584045F42833CE2CA5341F432D5ECE4AE44ED902A2",
+        keywords: ["ascension", "divine connection", "universal consciousness", "higher dimensions", "cosmic gateway"],
+        elementalAssociation: "Universal energy",
+        soundAssociation: "OM",
+        qrCodePath: "@assets/12. Stellar Gateway Chakra.png"
+      }
+    ];
+
+    // Add all chakras to storage
+    chakraData.forEach(chakra => {
+      this.createChakra(chakra);
+    });
+  }
+  
   private initializeCropCircleFormations() {
     // Sample authentic crop circle formations with mathematical representations
     const sampleFormations = [
@@ -521,6 +800,21 @@ export class DrizzleStorage implements IStorage {
 
   constructor(db: any) {
     this.db = db;
+
+    // Initialize schema data
+    this.initializeDefaultData();
+  }
+
+  private async initializeDefaultData() {
+    try {
+      // Initialize data only if tables are empty
+      const chakraCount = await this.db.select({ count: sql`count(*)` }).from(chakra);
+      if (chakraCount.length > 0 && Number(chakraCount[0].count) === 0) {
+        this.initializeChakras();
+      }
+    } catch (error) {
+      console.error("Error initializing default data:", error);
+    }
   }
   
   // User methods
@@ -676,6 +970,211 @@ export class DrizzleStorage implements IStorage {
   async createSpiritCommunication(communication: InsertSpiritCommunication): Promise<SpiritCommunication> {
     const result = await this.db.insert(spiritCommunication).values(communication).returning();
     return result[0];
+  }
+
+  // Chakra methods
+  async getChakras(): Promise<Chakra[]> {
+    return await this.db.select().from(chakra).orderBy(chakra.number);
+  }
+
+  async getChakraById(id: number): Promise<Chakra | undefined> {
+    const result = await this.db.select().from(chakra).where({ id }).limit(1);
+    return result[0];
+  }
+
+  async getChakraByNumber(number: number): Promise<Chakra | undefined> {
+    const result = await this.db.select().from(chakra).where({ number }).limit(1);
+    return result[0];
+  }
+
+  async createChakra(chakraData: InsertChakra): Promise<Chakra> {
+    const result = await this.db.insert(chakra).values(chakraData).returning();
+    return result[0];
+  }
+
+  // Chakra Healing Session methods
+  async getChakraHealingSessions(): Promise<ChakraHealingSession[]> {
+    return await this.db.select().from(chakraHealingSession)
+      .orderBy(chakraHealingSession.timestamp, 'desc');
+  }
+
+  async getChakraHealingSessionById(id: number): Promise<ChakraHealingSession | undefined> {
+    const result = await this.db.select().from(chakraHealingSession).where({ id }).limit(1);
+    return result[0];
+  }
+
+  async getUserChakraHealingSessions(userId: number): Promise<ChakraHealingSession[]> {
+    return await this.db.select().from(chakraHealingSession)
+      .where({ userId })
+      .orderBy(chakraHealingSession.timestamp, 'desc');
+  }
+
+  async createChakraHealingSession(session: InsertChakraHealingSession): Promise<ChakraHealingSession> {
+    const result = await this.db.insert(chakraHealingSession).values(session).returning();
+    return result[0];
+  }
+
+  async updateChakraHealingSessionStatus(id: number, status: string): Promise<ChakraHealingSession | undefined> {
+    const result = await this.db.update(chakraHealingSession)
+      .set({ status })
+      .where({ id })
+      .returning();
+    return result[0];
+  }
+
+  // Initialize data
+  private async initializeChakras() {
+    // Default chakras for the 12-chakra system
+    const defaultChakras = [
+      {
+        number: 1,
+        name: "Root Chakra",
+        sanskritName: "Muladhara",
+        color: "red",
+        element: "earth",
+        location: "base of spine",
+        frequency: 396,
+        healingCode: "741",
+        description: "The Root Chakra provides a foundation for all higher chakras. It is responsible for your sense of security and stability.",
+        qrCodePath: "@assets/1. Root Chakra.png"
+      },
+      {
+        number: 2,
+        name: "Sacral Chakra",
+        sanskritName: "Svadhisthana",
+        color: "orange",
+        element: "water",
+        location: "lower abdomen",
+        frequency: 417,
+        healingCode: "852",
+        description: "The Sacral Chakra relates to creativity, sexual energy, and emotional balance. It governs your ability to experience pleasure.",
+        qrCodePath: "@assets/2. Sacral Chakra.png"
+      },
+      {
+        number: 3,
+        name: "Solar Plexus Chakra",
+        sanskritName: "Manipura",
+        color: "yellow",
+        element: "fire",
+        location: "upper abdomen",
+        frequency: 528,
+        healingCode: "963",
+        description: "The Solar Plexus Chakra is the center of personal power, confidence, and self-esteem. It governs your sense of identity and autonomy.",
+        qrCodePath: "@assets/3. Solar Plexus Chakra.png"
+      },
+      {
+        number: 4,
+        name: "Heart Chakra",
+        sanskritName: "Anahata",
+        color: "green",
+        element: "air",
+        location: "center of chest",
+        frequency: 639,
+        healingCode: "174",
+        description: "The Heart Chakra is the bridge between the lower and higher chakras. It governs love, compassion, and acceptance of self and others.",
+        qrCodePath: "@assets/4. Heart Chakra.png"
+      },
+      {
+        number: 5,
+        name: "Throat Chakra",
+        sanskritName: "Vishuddha",
+        color: "blue",
+        element: "ether",
+        location: "throat",
+        frequency: 741,
+        healingCode: "285",
+        description: "The Throat Chakra is the center of communication, self-expression, and truth. It governs your ability to speak your authentic self.",
+        qrCodePath: "@assets/5. Throat Chakra.png"
+      },
+      {
+        number: 6,
+        name: "Third Eye Chakra",
+        sanskritName: "Ajna",
+        color: "indigo",
+        element: "light",
+        location: "center of forehead",
+        frequency: 852,
+        healingCode: "396",
+        description: "The Third Eye Chakra is the center of intuition, wisdom, and insight. It governs your perception beyond the physical world.",
+        qrCodePath: "@assets/6. Third Eye Chakra.png"
+      },
+      {
+        number: 7,
+        name: "Crown Chakra",
+        sanskritName: "Sahasrara",
+        color: "violet",
+        element: "cosmic energy",
+        location: "top of head",
+        frequency: 963,
+        healingCode: "417",
+        description: "The Crown Chakra connects you to universal consciousness and your higher purpose. It governs spiritual connection and enlightenment.",
+        qrCodePath: "@assets/7. Crown Chakra.png"
+      },
+      {
+        number: 8,
+        name: "Earth Star Chakra",
+        sanskritName: "Prithvi",
+        color: "brown",
+        element: "earth crystal",
+        location: "below feet",
+        frequency: 174,
+        healingCode: "528",
+        description: "The Earth Star Chakra grounds your energy to the Earth. It provides stability and anchors your higher energy centers.",
+        qrCodePath: "@assets/8. Earth Star Chakra.png"
+      },
+      {
+        number: 9,
+        name: "Soul Star Chakra",
+        sanskritName: "Atma",
+        color: "white",
+        element: "soul essence",
+        location: "above head",
+        frequency: 285,
+        healingCode: "639",
+        description: "The Soul Star Chakra connects you to your soul's blueprint and higher purpose. It governs spiritual growth and soul evolution.",
+        qrCodePath: "@assets/9. Soul Star Chakra.png"
+      },
+      {
+        number: 10,
+        name: "Higher Heart Chakra",
+        sanskritName: "Ananda Kanda",
+        color: "pink",
+        element: "divine love",
+        location: "upper chest",
+        frequency: 396,
+        healingCode: "741",
+        description: "The Higher Heart Chakra is the center of unconditional love, compassion, and forgiveness. It facilitates spiritual awakening.",
+        qrCodePath: "@assets/10. Higher Heart Chakra.png"
+      },
+      {
+        number: 11,
+        name: "Causal Chakra",
+        sanskritName: "Karana",
+        color: "gold",
+        element: "akashic records",
+        location: "back of head",
+        frequency: 417,
+        healingCode: "852",
+        description: "The Causal Chakra is the repository of all past life experiences and karma. It governs your spiritual evolution across lifetimes.",
+        qrCodePath: "@assets/11. Causal Chakra.png"
+      },
+      {
+        number: 12,
+        name: "Stellar Gateway Chakra",
+        sanskritName: "Nakshetra",
+        color: "silver",
+        element: "stellar light",
+        location: "far above head",
+        frequency: 528,
+        healingCode: "963",
+        description: "The Stellar Gateway Chakra connects you to the cosmos and interdimensional planes. It facilitates access to universal wisdom.",
+        qrCodePath: "@assets/12. Stellar Gateway Chakra.png"
+      }
+    ];
+
+    for (const chakraData of defaultChakras) {
+      await this.createChakra(chakraData);
+    }
   }
 }
 

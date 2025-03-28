@@ -19,8 +19,7 @@ import {
   createIntentionPacket,
   startIntentionRepeater,
   stopIntentionRepeater,
-  getActiveBroadcasts,
-  getBroadcastStatistics
+  getActiveBroadcasts
 } from "./network-packet";
 import { SCHUMANN_RESONANCE } from "./sacred-geometry";
 import { z } from "zod";
@@ -380,6 +379,138 @@ function createPortalGeometry(portalType: string, seedHash: number): any {
   return baseGeometry;
 }
 
+// Store active chakra healing broadcasts separately from general broadcasts
+interface ChakraBroadcast {
+  id: string;
+  intention: string;
+  chakraId: number;
+  startTime: number;
+  endTime: number;
+  duration: number;
+  intensity: number;
+  iterations: number;
+  isActive: boolean;
+  interval?: NodeJS.Timeout;
+}
+
+const activeChakraBroadcasts: ChakraBroadcast[] = [];
+
+// Function to start a chakra healing broadcast
+function startChakraBroadcast(options: {
+  intention: string;
+  repetitionRate?: number;
+  duration?: number;
+  multiplier?: number;
+}): string {
+  const {
+    intention,
+    repetitionRate = 10, // Default 10 Hz
+    duration = 600,      // Default 10 minutes (600 seconds)
+    multiplier = 1.0
+  } = options;
+  
+  // Generate a unique ID for this broadcast
+  const broadcastId = crypto.randomUUID();
+  
+  // Extract the chakra ID from the intention (if it exists in the format "Session X: ...")
+  const sessionMatch = intention.match(/Session (\d+):/);
+  const chakraId = sessionMatch ? parseInt(sessionMatch[1]) : 0;
+  
+  // Create the broadcast object
+  const broadcast: ChakraBroadcast = {
+    id: broadcastId,
+    intention,
+    chakraId,
+    startTime: Date.now(),
+    endTime: Date.now() + (duration * 1000),
+    duration,
+    intensity: multiplier,
+    iterations: 0,
+    isActive: true
+  };
+  
+  // Add the broadcast to the active broadcasts
+  activeChakraBroadcasts.push(broadcast);
+  
+  // Set up the broadcast interval
+  const interval = setInterval(() => {
+    // Check if we've reached the duration
+    if (Date.now() >= broadcast.endTime) {
+      stopChakraBroadcast(broadcastId);
+      return;
+    }
+    
+    // Increment the iterations
+    broadcast.iterations += repetitionRate;
+    
+    // Broadcast to all connected WebSocket clients
+    broadcastMessage({
+      type: "INTENTION",
+      data: {
+        message: `Chakra healing intention broadcast: "${intention}"`,
+        broadcastId,
+        intention,
+        iterations: broadcast.iterations,
+        runTime: Date.now() - broadcast.startTime,
+        remainingTime: Math.max(0, broadcast.endTime - Date.now()) / 1000
+      },
+      timestamp: new Date().toISOString()
+    });
+    
+  }, 1000); // Update once per second
+  
+  // Store the interval for later cleanup
+  broadcast.interval = interval;
+  
+  return broadcastId;
+}
+
+// Function to stop a chakra healing broadcast
+function stopChakraBroadcast(broadcastId: string): boolean {
+  // Find the broadcast
+  const index = activeChakraBroadcasts.findIndex(b => b.id === broadcastId);
+  if (index === -1) {
+    return false;
+  }
+  
+  // Get the broadcast
+  const broadcast = activeChakraBroadcasts[index];
+  
+  // Clear the interval
+  if (broadcast.interval) {
+    clearInterval(broadcast.interval);
+  }
+  
+  // Mark as inactive
+  broadcast.isActive = false;
+  
+  // Remove from the active broadcasts
+  activeChakraBroadcasts.splice(index, 1);
+  
+  return true;
+}
+
+// Function to get statistics about all chakra healing broadcasts
+function getChakraBroadcastStatistics() {
+  return {
+    activeCount: activeChakraBroadcasts.length,
+    totalIterations: activeChakraBroadcasts.reduce((sum, b) => sum + b.iterations, 0),
+    broadcasts: activeChakraBroadcasts.map(b => ({
+      id: b.id,
+      intention: b.intention,
+      chakraId: b.chakraId,
+      startTime: b.startTime,
+      endTime: b.endTime,
+      duration: b.duration,
+      intensity: b.intensity,
+      runTime: Date.now() - b.startTime,
+      remainingTime: Math.max(0, b.endTime - Date.now()) / 1000,
+      iterations: b.iterations,
+      isActive: b.isActive
+    }))
+  };
+}
+
 export async function registerRoutes(app: Express): Promise<Server> {
   const httpServer = createServer(app);
   
@@ -696,6 +827,134 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Chakra Healing Routes
+  //////////////////////////////
+
+  // Get all chakras
+  app.get('/api/chakras', async (req, res) => {
+    try {
+      const chakras = await storage.getChakras();
+      res.json(chakras);
+    } catch (error: any) {
+      res.status(500).json({ message: 'Error fetching chakras', error: error.message });
+    }
+  });
+
+  // Get chakra by ID
+  app.get('/api/chakras/:id', async (req, res) => {
+    try {
+      const chakra = await storage.getChakraById(parseInt(req.params.id));
+      if (!chakra) {
+        return res.status(404).json({ message: 'Chakra not found' });
+      }
+      res.json(chakra);
+    } catch (error: any) {
+      res.status(500).json({ message: 'Error fetching chakra', error: error.message });
+    }
+  });
+
+  // Get chakra by number (1-12)
+  app.get('/api/chakras/by-number/:number', async (req, res) => {
+    try {
+      const chakra = await storage.getChakraByNumber(parseInt(req.params.number));
+      if (!chakra) {
+        return res.status(404).json({ message: 'Chakra not found' });
+      }
+      res.json(chakra);
+    } catch (error: any) {
+      res.status(500).json({ message: 'Error fetching chakra', error: error.message });
+    }
+  });
+
+  // Create a chakra healing session
+  app.post('/api/chakra-healing-sessions', async (req, res) => {
+    try {
+      const session = await storage.createChakraHealingSession(req.body);
+      
+      // Start the healing broadcast if it's an active session
+      if (session.status === 'active') {
+        // Use the chakra's healing code as the intention
+        const chakra = await storage.getChakraById(session.chakraId);
+        if (!chakra) {
+          return res.status(404).json({ message: 'Chakra not found' });
+        }
+        
+        // Create the healing intention that includes the chakra name and user's personal intention
+        const healingIntention = `Heal and balance the ${chakra.name} with this intention: ${session.intention}`;
+        
+        // Start a broadcast with the chakra's healing code
+        const broadcastId = startChakraBroadcast({
+          intention: healingIntention,
+          repetitionRate: 50, // Default repetition rate
+          duration: session.duration, // Use the session duration
+          multiplier: Math.floor(session.intensity * 1.5) // Use intensity as a multiplier
+        });
+        
+        // Return the session with the broadcast ID
+        res.json({ ...session, broadcastId });
+      } else {
+        res.json(session);
+      }
+    } catch (error: any) {
+      res.status(500).json({ message: 'Error creating chakra healing session', error: error.message });
+    }
+  });
+
+  // Get all chakra healing sessions
+  app.get('/api/chakra-healing-sessions', async (req, res) => {
+    try {
+      const sessions = await storage.getChakraHealingSessions();
+      res.json(sessions);
+    } catch (error: any) {
+      res.status(500).json({ message: 'Error fetching chakra healing sessions', error: error.message });
+    }
+  });
+
+  // Get chakra healing session by ID
+  app.get('/api/chakra-healing-sessions/:id', async (req, res) => {
+    try {
+      const session = await storage.getChakraHealingSessionById(parseInt(req.params.id));
+      if (!session) {
+        return res.status(404).json({ message: 'Chakra healing session not found' });
+      }
+      res.json(session);
+    } catch (error: any) {
+      res.status(500).json({ message: 'Error fetching chakra healing session', error: error.message });
+    }
+  });
+
+  // Update chakra healing session status
+  app.patch('/api/chakra-healing-sessions/:id/status', async (req, res) => {
+    try {
+      const { status } = req.body;
+      if (!status || !['active', 'completed', 'interrupted'].includes(status)) {
+        return res.status(400).json({ message: 'Invalid status' });
+      }
+      
+      const session = await storage.updateChakraHealingSessionStatus(parseInt(req.params.id), status);
+      if (!session) {
+        return res.status(404).json({ message: 'Chakra healing session not found' });
+      }
+      
+      // If status is changing to 'interrupted' or 'completed', stop any active broadcast
+      if (status === 'interrupted' || status === 'completed') {
+        const broadcastStats = getChakraBroadcastStatistics();
+        // Find any broadcast containing the session ID
+        for (const broadcast of broadcastStats.broadcasts) {
+          if (broadcast.intention.includes(`Session ${session.id}:`)) {
+            stopChakraBroadcast(broadcast.id);
+            break;
+          }
+        }
+      }
+      
+      res.json(session);
+    } catch (error: any) {
+      res.status(500).json({ message: 'Error updating chakra healing session status', error: error.message });
+    }
+  });
+
+  //////////////////////////////
   // Spirit Communication Routes
   
   // Get all spirit communications
@@ -1027,7 +1286,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get status of all active broadcasts
   app.get("/api/intention-repeater-status", (req, res) => {
     try {
-      const stats = getBroadcastStatistics();
+      const stats = getChakraBroadcastStatistics();
       res.json(stats);
     } catch (error) {
       console.error("Error getting intention repeater status:", error);

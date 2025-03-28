@@ -141,3 +141,50 @@ export const insertSpiritCommunicationSchema = createInsertSchema(spiritCommunic
 
 export type InsertSpiritCommunication = z.infer<typeof insertSpiritCommunicationSchema>;
 export type SpiritCommunication = typeof spiritCommunication.$inferSelect;
+
+// Chakra model for storing chakra information and healing signatures
+export const chakra = pgTable("chakra", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  sanskritName: text("sanskrit_name"),
+  number: integer("number").notNull(), // 1-12 for the chakra position
+  color: text("color").notNull(), // Hex color code
+  location: text("location").notNull(), // Body location
+  description: text("description").notNull(),
+  healingCode: text("healing_code").notNull(), // SHA-512 healing code
+  keywords: json("keywords"), // Array of keywords associated with this chakra
+  elementalAssociation: text("elemental_association"), // Earth, Water, Fire, Air, etc.
+  soundAssociation: text("sound_association"), // Associated sound or mantra
+  qrCodePath: text("qr_code_path").notNull(), // Path to the QR code asset
+});
+
+export const insertChakraSchema = createInsertSchema(chakra).omit({
+  id: true,
+});
+
+export type InsertChakra = z.infer<typeof insertChakraSchema>;
+export type Chakra = typeof chakra.$inferSelect;
+
+// Chakra Healing Session model for tracking healing sessions
+export const chakraHealingSession = pgTable("chakra_healing_session", {
+  id: serial("id").primaryKey(),
+  chakraId: integer("chakra_id").references(() => chakra.id).notNull(),
+  userId: integer("user_id").references(() => users.id),
+  intention: text("intention").notNull(),
+  duration: integer("duration").notNull(), // Duration in seconds
+  intensity: integer("intensity").notNull().default(5), // Scale 1-10
+  repetitions: integer("repetitions").notNull().default(108), // Number of healing code repetitions
+  useFrequency: boolean("use_frequency").default(true), // Whether to use sound frequency
+  frequency: real("frequency"), // Hz frequency if sound is used
+  timestamp: timestamp("timestamp").defaultNow().notNull(),
+  notes: text("notes"), // User notes about the session
+  status: text("status").notNull().default("completed"), // active, completed, interrupted
+});
+
+export const insertChakraHealingSessionSchema = createInsertSchema(chakraHealingSession).omit({
+  id: true,
+  timestamp: true,
+});
+
+export type InsertChakraHealingSession = z.infer<typeof insertChakraHealingSessionSchema>;
+export type ChakraHealingSession = typeof chakraHealingSession.$inferSelect;
