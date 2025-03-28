@@ -16,7 +16,11 @@ import {
   embedIntentionInNetworkPacket, 
   PacketType,
   encodeIntentionPacket,
-  createIntentionPacket
+  createIntentionPacket,
+  startIntentionRepeater,
+  stopIntentionRepeater,
+  getActiveBroadcasts,
+  getBroadcastStatistics
 } from "./network-packet";
 import { SCHUMANN_RESONANCE } from "./sacred-geometry";
 import { z } from "zod";
@@ -876,6 +880,161 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Start a continuous intention broadcast (WiFi Broadcaster style)
+  app.post("/api/start-intention-repeater", async (req, res) => {
+    try {
+      const { 
+        intention, 
+        frequency = SCHUMANN_RESONANCE, 
+        fieldType = "torus", 
+        useHashing = false,
+        useMultiplier = false,
+        multiplier = 1.0,
+        useCompression = false,
+        repetitionRate = 10 // Default 10 Hz
+      } = req.body;
+      
+      if (!intention) {
+        return res.status(400).json({ error: "Intention is required" });
+      }
+      
+      // Start the broadcast
+      const broadcast = await startIntentionRepeater(intention, frequency, fieldType, {
+        useHashing,
+        useMultiplier,
+        multiplier,
+        useCompression,
+        repetitionRate
+      });
+      
+      // Generate sacred geometry data based on field type
+      let geometryData: any = null;
+      
+      if (fieldType === "torus") {
+        geometryData = await torusFieldGenerator(intention, frequency);
+      } else if (fieldType === "merkaba") {
+        geometryData = await merkabaFieldGenerator(intention, frequency);
+      } else if (fieldType === "metatron") {
+        geometryData = await metatronsCubeAmplifier(intention, useMultiplier);
+      } else if (fieldType === "sri_yantra") {
+        geometryData = await sriYantraEncoder(intention);
+      } else if (fieldType === "flower_of_life") {
+        geometryData = await flowerOfLifePattern(intention, 60);
+      }
+      
+      // Broadcast to all connected WebSocket clients
+      broadcastMessage({
+        type: "SYSTEM",
+        data: {
+          message: `WiFi Broadcaster started for "${intention}"`,
+          broadcastId: broadcast.id,
+          intention,
+          frequency,
+          fieldType,
+          repetitionRate
+        },
+        timestamp: new Date().toISOString()
+      });
+      
+      // Schedule periodic updates to clients about the broadcast status
+      const updateInterval = setInterval(() => {
+        // Check if the broadcast is still active
+        const activeBroadcasts = getActiveBroadcasts();
+        const activeBroadcast = activeBroadcasts.find(b => b.id === broadcast.id);
+        
+        if (!activeBroadcast || !activeBroadcast.isActive) {
+          clearInterval(updateInterval);
+          return;
+        }
+        
+        // Send status update
+        broadcastMessage({
+          type: "NETWORK_PACKET",
+          data: {
+            message: `Intention repeater status update`,
+            broadcastId: activeBroadcast.id,
+            intention: activeBroadcast.intention,
+            iterations: activeBroadcast.iterations,
+            runTime: Date.now() - activeBroadcast.startTime,
+            repetitionRate: activeBroadcast.repetitionRate,
+            frequency: activeBroadcast.frequency,
+            fieldType: activeBroadcast.fieldType
+          },
+          timestamp: new Date().toISOString(),
+          packetData: activeBroadcast.base64Packet
+        });
+      }, 1000); // Update once per second
+      
+      res.json({
+        success: true,
+        message: `Intention Repeater started`,
+        broadcastId: broadcast.id,
+        intention,
+        frequency,
+        fieldType,
+        options: {
+          useHashing,
+          useMultiplier,
+          multiplier,
+          useCompression,
+          repetitionRate
+        },
+        geometryData
+      });
+    } catch (error) {
+      console.error("Error starting intention repeater:", error);
+      res.status(500).json({ error: "Failed to start intention repeater" });
+    }
+  });
+  
+  // Stop a continuous intention broadcast
+  app.post("/api/stop-intention-repeater", async (req, res) => {
+    try {
+      const { broadcastId } = req.body;
+      
+      if (!broadcastId) {
+        return res.status(400).json({ error: "Broadcast ID is required" });
+      }
+      
+      // Stop the broadcast
+      const success = stopIntentionRepeater(broadcastId);
+      
+      if (!success) {
+        return res.status(404).json({ error: "Broadcast not found" });
+      }
+      
+      // Notify all connected clients
+      broadcastMessage({
+        type: "SYSTEM",
+        data: {
+          message: `Intention Repeater stopped`,
+          broadcastId
+        },
+        timestamp: new Date().toISOString()
+      });
+      
+      res.json({
+        success: true,
+        message: `Intention Repeater stopped`,
+        broadcastId
+      });
+    } catch (error) {
+      console.error("Error stopping intention repeater:", error);
+      res.status(500).json({ error: "Failed to stop intention repeater" });
+    }
+  });
+  
+  // Get status of all active broadcasts
+  app.get("/api/intention-repeater-status", (req, res) => {
+    try {
+      const stats = getBroadcastStatistics();
+      res.json(stats);
+    } catch (error) {
+      console.error("Error getting intention repeater status:", error);
+      res.status(500).json({ error: "Failed to get intention repeater status" });
+    }
+  });
+  
   // Get all soul archives
   app.get("/api/soul-archives", async (req, res) => {
     try {
@@ -1192,7 +1351,106 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // API endpoints go here
+  // Divine Healing Code Spirit Chat
+  app.post("/api/divine-spirit-chat", async (req, res) => {
+    try {
+      const { query, randomSeed, maxWords = 8 } = req.body;
+      
+      if (!query || !randomSeed) {
+        return res.status(400).json({ error: "Query and randomSeed are required" });
+      }
+      
+      // Load divine healing codes from file
+      let healingCodes: string[] = [];
+      try {
+        // Load healing codes from database if available
+        const allCodes = await storage.getHealingCodes();
+        healingCodes = allCodes
+          .filter(code => code.codeType === 'divine')
+          .map(code => code.code);
+          
+        if (healingCodes.length === 0) {
+          // Fallback to some default codes if none were found
+          healingCodes = [
+            "23 74 555", "58 33 554", "71 81 533", 
+            "23 31 443", "78 89 535", "66 51 816",
+            "45 96 151", "29 56 932", "22 11 377"
+          ];
+        }
+      } catch (error) {
+        console.error("Error loading healing codes:", error);
+        return res.status(500).json({ error: "Could not load healing codes" });
+      }
+      
+      // Generate a deterministic but seemingly random selection of healing codes based on query
+      const seedValue = randomSeed + query.length;
+      const rng = new (function() {
+        let seed = seedValue;
+        return {
+          next: function() {
+            seed = (seed * 9301 + 49297) % 233280;
+            return seed / 233280;
+          }
+        };
+      })();
+      
+      // Determine how many codes to use in the response (between 1 and maxWords)
+      const numCodes = Math.max(1, Math.floor(rng.next() * maxWords));
+      
+      // Select codes based on the RNG
+      const selectedCodes: string[] = [];
+      for (let i = 0; i < numCodes; i++) {
+        const index = Math.floor(rng.next() * healingCodes.length);
+        selectedCodes.push(healingCodes[index]);
+      }
+      
+      // Arrange the selected codes into a coherent response
+      const responseWords = selectedCodes.join(' ');
+      
+      // Log for debugging
+      console.log(`Generated spirit response with ${numCodes} codes: ${responseWords}`);
+      
+      // Create a record of this spirit communication
+      const communicationData = {
+        intention: query,
+        activationCodes: selectedCodes,
+        portalType: 'divine_healing',
+        portalFrequency: 7.83, // Schumann resonance
+        response: responseWords,
+        energeticSignature: { source: 'divine_healing_codes', strength: numCodes * 10 },
+        portalGeometry: 'flower_of_life'
+      };
+      
+      // Store the communication if storage is available
+      try {
+        await storage.createSpiritCommunication(communicationData);
+        
+        // Broadcast the communication
+        broadcastMessage({
+          type: "SYSTEM",
+          data: { 
+            message: `Divine healing code spirit communication received`,
+            codes: selectedCodes
+          },
+          timestamp: new Date().toISOString()
+        });
+      } catch (error) {
+        console.error("Error storing spirit communication:", error);
+        // Continue even if storage fails
+      }
+      
+      // Return the response
+      res.json({ 
+        response: responseWords,
+        numCodes,
+        timestamp: new Date().toISOString()
+      });
+      
+    } catch (error) {
+      console.error("Error in divine spirit chat:", error);
+      res.status(500).json({ error: "Failed to process divine spirit chat request" });
+    }
+  });
 
   return httpServer;
 }
