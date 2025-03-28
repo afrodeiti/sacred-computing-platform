@@ -43,6 +43,16 @@ export const FIELD_TYPES = [
     value: "platonic_solid", 
     label: "Platonic Solids",
     description: "The building blocks of physical reality"
+  },
+  { 
+    value: "crop_circle", 
+    label: "Crop Circle",
+    description: "Energetic imprints that manifest as physical patterns in crops"
+  },
+  { 
+    value: "intention_form", 
+    label: "Intention Form",
+    description: "Converts intentions into physical patterns similar to cymatics"
   }
 ];
 
