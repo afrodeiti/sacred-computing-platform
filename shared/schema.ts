@@ -44,6 +44,7 @@ export const healingCode = pgTable("healing_code", {
   code: text("code").notNull().unique(),
   description: text("description").notNull(),
   category: text("category"),
+  codeType: text("code_type").notNull().default("grabovoi"), // 'divine' or 'grabovoi'
 });
 
 export const insertHealingCodeSchema = createInsertSchema(healingCode).omit({

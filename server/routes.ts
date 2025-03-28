@@ -284,6 +284,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const search = req.query.search as string | undefined;
       const category = req.query.category as string | undefined;
+      const codeType = req.query.codeType as string | undefined;
       
       let codes;
       if (search) {
@@ -292,6 +293,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         codes = await storage.getHealingCodesByCategory(category);
       } else {
         codes = await storage.getHealingCodes();
+      }
+      
+      // Filter by code type if specified
+      if (codeType && (codeType === 'divine' || codeType === 'grabovoi')) {
+        codes = codes.filter(code => code.codeType === codeType);
       }
       
       res.json(codes);
@@ -304,14 +310,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Semantic search for healing codes
   app.post("/api/healing-codes/semantic", async (req, res) => {
     try {
-      const { issue, limit = 5 } = req.body;
+      const { issue, limit = 5, codeType } = req.body;
       
       if (!issue) {
         return res.status(400).json({ error: "Issue description is required" });
       }
       
       // Get all healing codes
-      const allCodes = await storage.getHealingCodes();
+      let allCodes = await storage.getHealingCodes();
+      
+      // Filter by code type if specified
+      if (codeType && (codeType === 'divine' || codeType === 'grabovoi')) {
+        allCodes = allCodes.filter(code => code.codeType === codeType);
+      }
       
       // Import the semantic search function
       const { semanticHealingCodeSearch } = await import("./openai");
@@ -319,7 +330,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Perform semantic search
       const searchResults = await semanticHealingCodeSearch(issue, allCodes, limit);
       
-      res.json(searchResults);
+      // Add a field indicating if this is Divine or Grabovoi code
+      const resultsWithLabels = searchResults.map(result => ({
+        ...result,
+        typeLabel: result.codeType === 'divine' ? 'Divine Healing Code' : 'Grabovoi Code'
+      }));
+      
+      res.json(resultsWithLabels);
     } catch (error) {
       console.error("Error performing semantic healing code search:", error);
       res.status(500).json({ error: "Failed to perform semantic healing code search" });

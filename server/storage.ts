@@ -166,7 +166,8 @@ export class MemStorage implements IStorage {
       id,
       code: code.code,
       description: code.description,
-      category: code.category ?? null
+      category: code.category ?? null,
+      codeType: code.codeType ?? "grabovoi" // Default to Grabovoi if not specified
     };
     
     this.healingCodes.set(id, healingCode);
@@ -299,21 +300,40 @@ export class MemStorage implements IStorage {
 
   // Initialize with sample data
   private initializeHealingCodes() {
-    // Sample healing codes from the uploaded file
-    const sampleCodes = [
-      { code: "23 74 555", description: "Healing headaches in general", category: "CENTRAL NERVOUS SYSTEM" },
-      { code: "58 33 554", description: "Healing migraine", category: "CENTRAL NERVOUS SYSTEM" },
-      { code: "71 81 533", description: "Back pain relief", category: "CENTRAL NERVOUS SYSTEM" },
-      { code: "33 45 10101", description: "Forgiveness", category: "PSYCHOLOGICAL CONCERNS" },
-      { code: "11 96 888", description: "Low self-esteem to healthy self-image", category: "SELF-HELP" },
-      { code: "8888", description: "Divine protection", category: "SPIRITUAL" },
-      { code: "13 13 514", description: "Stress relief/relaxation", category: "SELF-HELP" },
-      { code: "517 489719 841", description: "Increase self-confidence", category: "SELF-HELP" },
-      { code: "56 57 893", description: "Unconditional love", category: "RELATIONSHIPS" },
-      { code: "888 412 1289018", description: "Love (general & relationships)", category: "RELATIONSHIPS" }
+    // Sample Grabovoi codes
+    const grabovoiCodes = [
+      { code: "23 74 555", description: "Healing headaches in general", category: "CENTRAL NERVOUS SYSTEM", codeType: "grabovoi" },
+      { code: "58 33 554", description: "Healing migraine", category: "CENTRAL NERVOUS SYSTEM", codeType: "grabovoi" },
+      { code: "71 81 533", description: "Back pain relief", category: "CENTRAL NERVOUS SYSTEM", codeType: "grabovoi" },
+      { code: "33 45 10101", description: "Forgiveness", category: "PSYCHOLOGICAL CONCERNS", codeType: "grabovoi" },
+      { code: "11 96 888", description: "Low self-esteem to healthy self-image", category: "SELF-HELP", codeType: "grabovoi" },
+      { code: "8888", description: "Divine protection", category: "SPIRITUAL", codeType: "grabovoi" },
+      { code: "13 13 514", description: "Stress relief/relaxation", category: "SELF-HELP", codeType: "grabovoi" },
+      { code: "517 489719 841", description: "Increase self-confidence", category: "SELF-HELP", codeType: "grabovoi" },
+      { code: "56 57 893", description: "Unconditional love", category: "RELATIONSHIPS", codeType: "grabovoi" },
+      { code: "888 412 1289018", description: "Love (general & relationships)", category: "RELATIONSHIPS", codeType: "grabovoi" }
     ];
     
-    sampleCodes.forEach(code => {
+    // Sample Divine healing codes
+    const divineHealingCodes = [
+      { code: "963", description: "Connection with Higher Self", category: "SPIRITUAL", codeType: "divine" },
+      { code: "528", description: "DNA Repair and Transformation", category: "HEALING", codeType: "divine" },
+      { code: "432", description: "Universal Harmony and Resonance", category: "HARMONY", codeType: "divine" },
+      { code: "639", description: "Heart Chakra Balance", category: "CHAKRAS", codeType: "divine" },
+      { code: "417", description: "Facilitating Change and Transition", category: "TRANSFORMATION", codeType: "divine" },
+      { code: "852", description: "Third Eye Awakening", category: "SPIRITUAL", codeType: "divine" },
+      { code: "369", description: "Tesla's Key to the Universe", category: "UNIVERSAL LAWS", codeType: "divine" },
+      { code: "174", description: "Natural Analgesia and Pain Relief", category: "PAIN RELIEF", codeType: "divine" },
+      { code: "741", description: "Cleansing and Detoxification", category: "PURIFICATION", codeType: "divine" },
+      { code: "396", description: "Liberation from Fear and Guilt", category: "EMOTIONAL RELEASE", codeType: "divine" }
+    ];
+    
+    // Add all codes to the storage
+    grabovoiCodes.forEach(code => {
+      this.createHealingCode(code);
+    });
+    
+    divineHealingCodes.forEach(code => {
       this.createHealingCode(code);
     });
   }
