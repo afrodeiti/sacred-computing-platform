@@ -185,7 +185,7 @@ export class DrizzleStorage implements IStorage {
   
   // Soul Archive methods
   async getSoulArchives(): Promise<SoulArchive[]> {
-    return await this.db.select().from(soulArchive).orderBy(({ desc }: { desc: any }) => [desc(soulArchive.created_at)]);
+    return await this.db.select().from(soulArchive).orderBy(soulArchive.created_at, 'desc');
   }
   
   async getSoulArchiveById(id: number): Promise<SoulArchive | undefined> {
@@ -230,6 +230,20 @@ export class DrizzleStorage implements IStorage {
   }
 }
 
-// Use MemStorage for development
-// In production, use DrizzleStorage with the database connection
-export const storage = new MemStorage();
+// Use DrizzleStorage in production, otherwise MemStorage for development
+import { drizzle } from 'drizzle-orm/postgres-js';
+import postgres from 'postgres';
+
+let storage: IStorage;
+
+if (process.env.NODE_ENV === 'production' && process.env.DATABASE_URL) {
+  console.log("Using DrizzleStorage with PostgreSQL database");
+  const client = postgres(process.env.DATABASE_URL);
+  const db = drizzle(client);
+  storage = new DrizzleStorage(db);
+} else {
+  console.log("Using MemStorage (no database connection)");
+  storage = new MemStorage();
+}
+
+export { storage };
